@@ -2506,7 +2506,8 @@ async function loadCalendarData() {
 
     // Organizar por data
     (cards || []).forEach(card => {
-      const dateStr = card.data;
+      // Garantir formato YYYY-MM-DD
+      const dateStr = card.data.substring(0, 10);
       if (!calendarData[dateStr]) calendarData[dateStr] = { cards: [] };
 
       // Montar post se existir
