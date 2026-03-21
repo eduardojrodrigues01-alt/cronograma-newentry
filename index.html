@@ -1123,6 +1123,7 @@
     .legend { display: none; }
   }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
 <body>
 
@@ -1196,17 +1197,98 @@
 
 <script>
 // ────────────────────────────────────────────
+// SUPABASE
+// ────────────────────────────────────────────
+const sb = supabase.createClient('https://peazuzkeqedzfseusrxp.supabase.co', 'sb_publishable_LV7n8mwxRAcGI5ujmjKnSg_ADTUlAJU');
+
+// Capturar token de magic link / reset de senha na URL
+(async function handleAuthRedirect() {
+  const hash = window.location.hash;
+  if (hash && hash.includes('access_token')) {
+    // Extrair tokens da URL
+    const params = new URLSearchParams(hash.substring(1));
+    const accessToken = params.get('access_token');
+    const refreshToken = params.get('refresh_token');
+    const type = params.get('type');
+
+    if (accessToken) {
+      // Definir sessão com o token
+      const { data, error } = await sb.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken || ''
+      });
+
+      // Limpar hash da URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+
+      if (type === 'recovery') {
+        // Mostrar formulário de nova senha
+        showResetPasswordForm();
+        return;
+      }
+    }
+  }
+})();
+
+function showResetPasswordForm() {
+  const screen = document.createElement('div');
+  screen.className = 'login-screen';
+  screen.id = 'resetScreen';
+  screen.innerHTML = `
+    <div class="login-hero">
+      <div class="login-hero-tagline">Plataforma de Conteúdo</div>
+      <div class="login-hero-title">Criar nova<br><em>senha.</em></div>
+    </div>
+    <div class="login-box">
+      <div class="login-box-eyebrow">Segurança</div>
+      <div class="login-title">Nova senha</div>
+      <div class="login-sub">Digite sua nova senha de acesso.</div>
+      <div class="login-error" id="resetError" style="display:none"></div>
+      <label class="login-label">Nova senha</label>
+      <input class="login-input" id="newPasswordInput" type="password" placeholder="••••••••" minlength="6">
+      <label class="login-label">Confirmar senha</label>
+      <input class="login-input" id="confirmPasswordInput" type="password" placeholder="••••••••"
+        onkeydown="if(event.key==='Enter') doResetPassword()">
+      <button class="login-btn" onclick="doResetPassword()">Salvar nova senha →</button>
+    </div>`;
+  document.body.appendChild(screen);
+  setTimeout(() => document.getElementById('newPasswordInput')?.focus(), 100);
+}
+
+async function doResetPassword() {
+  const newPass = document.getElementById('newPasswordInput')?.value;
+  const confirmPass = document.getElementById('confirmPasswordInput')?.value;
+  const errorEl = document.getElementById('resetError');
+
+  if (!newPass || newPass.length < 6) {
+    errorEl.textContent = 'A senha deve ter pelo menos 6 caracteres.';
+    errorEl.style.display = 'block'; return;
+  }
+  if (newPass !== confirmPass) {
+    errorEl.textContent = 'As senhas não coincidem.';
+    errorEl.style.display = 'block'; return;
+  }
+
+  const { error } = await sb.auth.updateUser({ password: newPass });
+  if (error) {
+    errorEl.textContent = 'Erro ao salvar senha. Tente novamente.';
+    errorEl.style.display = 'block'; return;
+  }
+
+  document.getElementById('resetScreen')?.remove();
+  showToast('✅ Senha alterada com sucesso!');
+  initApp();
+}
+
+// ────────────────────────────────────────────
 // STATE
 // ────────────────────────────────────────────
 const MONTHS_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const DAYS_PT   = ['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
 
-let currentUser = sessionStorage.getItem('userName') || null;
-// Usuários cadastrados — quando vier o Supabase, isso vem do banco
-const USERS = [
-  { email: 'agencia@newentry.com.br', password: '1234', name: 'Agência New Entry', role: 'agency' },
-  { email: 'cliente@fontlife.com.br', password: '1234', name: 'Cliente Font Life',  role: 'client' },
-];
+let currentUser = null;
+let currentUserRole = null;
+let currentClienteId = null;
 let stagingItems = [];
 let selectedType = null;
 let newCardTitle = '__none__';
@@ -1215,10 +1297,6 @@ let viewYear = currentDate.getFullYear();
 let viewMonth = currentDate.getMonth();
 let isAgency = true;
 let selectedDay = null;
-
-// Data store: key = 'YYYY-MM-DD'
-// Each day: { cards: [{id, title, caption, post, comments}] }
-// post: null | { type, name, src, emoji, items }
 let calendarData = {};
 
 function uid() { return Math.random().toString(36).slice(2,9); }
@@ -1236,36 +1314,7 @@ function cardStatus(card) {
   return card.status || 'empty';
 }
 
-// Demo data
-(function seedDemo() {
-  const y = viewYear, m = (viewMonth+1).toString().padStart(2,'0');
-  const d = (n) => `${y}-${m}-${n.toString().padStart(2,'0')}`;
-
-  const c1 = makeCard('Dia Mundial da Música');
-  c1.caption = 'A música une o mundo! 🎶 Celebre esse dia especial com a gente.';
-  c1.status = 'approved';
-  c1.post = { type:'photo', name:'Post_Musica.jpg', src:null, emoji:'🖼️' };
-  calendarData[d(3)] = { cards: [c1] };
-
-  const c2 = makeCard('Lançamento Produto');
-  c2.caption = 'Novo produto chegando! Fique de olho 👀';
-  c2.status = 'pending';
-  c2.post = { type:'video', name:'Story_Produto.mp4', src:null, emoji:'🎬' };
-  const c3 = makeCard('Dicas de Hidratação');
-  c3.caption = 'Top 5 dicas para alavancar suas vendas este mês.';
-  c3.status = 'rejected';
-  c3.post = { type:'carousel', name:'Carrossel_Dicas', src:null, emoji:'🎠', items:[] };
-  calendarData[d(10)] = { cards: [c2, c3] };
-
-  const c4 = makeCard('Dia dos Namorados');
-  c4.caption = 'Amor está no ar! Aproveite nossos especiais 💕';
-  c4.status = 'pending';
-  c4.post = { type:'photo', name:'Namorados_Arte.jpg', src:null, emoji:'🖼️' };
-  calendarData[d(14)] = { cards: [c4] };
-
-  const c5 = makeCard('Dia Mundial da Água');
-  calendarData[d(22)] = { cards: [c5] };
-})();
+// Dados carregados do Supabase
 
 // ────────────────────────────────────────────
 // CALENDAR RENDER
@@ -1488,7 +1537,7 @@ function cancelNewCard() {
   renderModalBody(false);
 }
 
-function confirmNewCard() {
+async function confirmNewCard() {
   const val = (document.getElementById('newCardTitleInput')?.value || newCardTitle).trim();
   if (!val) { showToast('Digite um nome para o card'); return; }
   const card = makeCard(val);
@@ -1498,6 +1547,8 @@ function confirmNewCard() {
   renderModalBody(false);
   renderCalendar();
   showToast('✅ Card criado!');
+  // Salvar no Supabase
+  await saveCardToSupabase(card, selectedDay);
 }
 
 function renderCard(card) {
@@ -1945,17 +1996,20 @@ function setCardStatus(cardId, status) {
   showToast(status==='approved'?'✅ Marque como salvo quando confirmar.':'❌ Marque como salvo quando confirmar.');
 }
 
-function sendCardComment(cardId) {
+async function sendCardComment(cardId) {
   const card = getDay(selectedDay).cards.find(c=>c.id===cardId);
   if (!card) return;
   const el = document.getElementById(`comment-${cardId}`);
   if (!el?.value.trim()) return;
+  const text = el.value.trim();
   const now = new Date();
-  card.comments.push({ text:el.value.trim(), author:currentUser,
+  card.comments.push({ text, author:currentUser,
     date:now.toLocaleDateString('pt-BR'), time:now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) });
   logHistory(card, 'comment', `Enviou um comentário`);
   el.value='';
   renderModalBody(); showToast('💬 Comentário enviado!');
+  // Salvar no Supabase em background
+  if (card.db_id) await saveCommentToSupabase(card.db_id, text);
 }
 
 function deleteCardComment(cardId, idx) {
@@ -1986,19 +2040,19 @@ function openCardCarouselPreview(cardId, startIdx) {
   requestAnimationFrame(()=>overlay.classList.add('open'));
 }
 
-function saveCard(cardId) {
+async function saveCard(cardId) {
   const card = getDay(selectedDay).cards.find(c=>c.id===cardId);
   if (!card) return;
-  // Salvar legenda atual
   const captionEl = document.getElementById(`caption-${cardId}`);
   if (captionEl) card.caption = captionEl.value;
-  // Logar status se tiver mudança
   const statusLabel = { approved:'Aprovado', pending:'Aguardando', rejected:'Reprovado', empty:'Sem post' };
   if (!card.saved) {
     logHistory(card, card.status==='approved'?'approve':card.status==='rejected'?'reject':'edit',
       `Salvou o card (status: ${statusLabel[card.status]||card.status})`);
   }
   card.saved = true;
+  showToast('💾 Salvando...');
+  await saveCardToSupabase(card, selectedDay);
   renderModalBody(); renderCalendar();
   showToast('💾 Card salvo!');
 }
@@ -2315,48 +2369,203 @@ function showLoginScreen() {
       <input class="login-input" id="loginPassword" type="password" placeholder="••••••••"
         onkeydown="if(event.key==='Enter') doLogin()">
       <span class="login-forgot" onclick="showToast('Entre em contato com a agência para redefinir sua senha.')">Esqueci minha senha</span>
-      <button class="login-btn" onclick="doLogin()">Entrar →</button>
+      <button class="login-btn" id="loginSubmitBtn" onclick="doLogin()">Entrar →</button>
       <div class="login-footer-note">Não tem acesso ainda?<br>Entre em contato com a New Entry.</div>
     </div>`;
   document.body.appendChild(screen);
   setTimeout(() => document.getElementById('loginEmail')?.focus(), 100);
 }
 
-function doLogin() {
+async function doLogin() {
   const email = document.getElementById('loginEmail')?.value.trim().toLowerCase();
   const password = document.getElementById('loginPassword')?.value;
   const errorEl = document.getElementById('loginError');
-  const user = USERS.find(u => u.email === email && u.password === password);
-  if (!user) {
-    if (errorEl) errorEl.style.display = 'block';
-    return;
+  const btn = document.getElementById('loginSubmitBtn');
+
+  if (btn) { btn.textContent = 'Entrando...'; btn.disabled = true; }
+
+  try {
+    // Login via Supabase Auth
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+
+    // Buscar perfil do usuário
+    const { data: perfil, error: perfilError } = await sb.from('usuarios')
+      .select('*').eq('id', data.user.id).single();
+    if (perfilError) throw perfilError;
+
+    currentUser = perfil.nome;
+    currentUserRole = perfil.papel;
+    currentClienteId = perfil.cliente_id;
+    isAgency = perfil.papel === 'agencia';
+
+    if (errorEl) errorEl.style.display = 'none';
+    const screen = document.getElementById('loginScreen');
+    if (screen) screen.remove();
+
+    const badge = document.getElementById('roleBadge');
+    const switchBtn = document.getElementById('switchBtn');
+    if (badge) { badge.textContent = isAgency ? 'Agência' : 'Cliente'; badge.className = 'role-badge' + (isAgency?'':' client'); }
+    if (switchBtn) switchBtn.style.display = isAgency ? '' : 'none';
+
+    await loadCalendarData();
+    renderCalendar();
+
+  } catch(err) {
+    console.error(err);
+    if (errorEl) { errorEl.textContent = 'E-mail ou senha incorretos.'; errorEl.style.display = 'block'; }
+    if (btn) { btn.textContent = 'Entrar →'; btn.disabled = false; }
   }
-  if (errorEl) errorEl.style.display = 'none';
-  currentUser = user.name;
-  isAgency = user.role === 'agency';
-  sessionStorage.setItem('userName', user.name);
-  sessionStorage.setItem('userRole', user.role);
-  const screen = document.getElementById('loginScreen');
-  if (screen) screen.remove();
-  const badge = document.getElementById('roleBadge');
-  const btn = document.getElementById('switchBtn');
-  if (badge) { badge.textContent = isAgency ? 'Agência' : 'Cliente'; badge.className = 'role-badge' + (isAgency?'':' client'); }
-  if (btn) btn.style.display = isAgency ? '' : 'none';
-  renderCalendar();
+}
+
+async function doLogout() {
+  await sb.auth.signOut();
+  currentUser = null; currentUserRole = null; isAgency = true; calendarData = {};
+  showLoginScreen();
+}
+
+// ────────────────────────────────────────────
+// SUPABASE DATA
+// ────────────────────────────────────────────
+async function loadCalendarData() {
+  calendarData = {};
+  try {
+    // Buscar cards do mês atual
+    const startDate = `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-01`;
+    const endDate = `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-31`;
+
+    let query = sb.from('cards').select(`
+      *,
+      posts(*),
+      comentarios(*)
+    `).gte('data', startDate).lte('data', endDate);
+
+    // Filtrar por cliente se não for agência
+    if (!isAgency && currentClienteId) {
+      query = query.eq('cliente_id', currentClienteId);
+    }
+
+    const { data: cards, error } = await query.order('data');
+    if (error) throw error;
+
+    // Organizar por data
+    (cards || []).forEach(card => {
+      const dateStr = card.data;
+      if (!calendarData[dateStr]) calendarData[dateStr] = { cards: [] };
+
+      // Montar post se existir
+      let post = null;
+      if (card.posts && card.posts.length > 0) {
+        const p = card.posts[0];
+        post = { type: p.tipo, name: p.nome, src: null, emoji: p.tipo==='photo'?'🖼️':p.tipo==='video'?'🎬':'🎠', storage_path: p.storage_path, db_id: p.id };
+      }
+
+      calendarData[dateStr].cards.push({
+        id: card.id,
+        title: card.titulo,
+        caption: card.legenda || '',
+        status: card.status,
+        saved: card.salvo,
+        post: post,
+        comments: (card.comentarios || []).map(c => ({
+          text: c.texto, author: c.autor_nome,
+          date: new Date(c.criado_em).toLocaleDateString('pt-BR'),
+          time: new Date(c.criado_em).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}),
+          db_id: c.id
+        })),
+        history: [],
+        db_id: card.id
+      });
+    });
+  } catch(err) {
+    console.error('Erro ao carregar dados:', err);
+    showToast('Erro ao carregar calendário');
+  }
+}
+
+async function saveCardToSupabase(card, dateStr) {
+  try {
+    const clienteId = isAgency ? (currentClienteId || null) : currentClienteId;
+    
+    if (card.db_id && card.db_id === card.id) {
+      // Update
+      await sb.from('cards').update({
+        titulo: card.title,
+        legenda: card.caption,
+        status: card.status,
+        salvo: card.saved,
+        atualizado_em: new Date().toISOString()
+      }).eq('id', card.db_id);
+    } else {
+      // Insert
+      const { data, error } = await sb.from('cards').insert({
+        titulo: card.title,
+        legenda: card.caption,
+        status: card.status,
+        salvo: card.saved,
+        data: dateStr,
+        cliente_id: clienteId,
+        criado_por: (await sb.auth.getUser()).data.user?.id
+      }).select().single();
+      if (error) throw error;
+      card.db_id = data.id;
+      card.id = data.id;
+    }
+  } catch(err) {
+    console.error('Erro ao salvar card:', err);
+    showToast('Erro ao salvar. Tente novamente.');
+  }
+}
+
+async function saveCommentToSupabase(cardId, text) {
+  try {
+    const user = (await sb.auth.getUser()).data.user;
+    const { data, error } = await sb.from('comentarios').insert({
+      card_id: cardId,
+      autor_id: user?.id,
+      autor_nome: currentUser,
+      texto: text
+    }).select().single();
+    if (error) throw error;
+    return data;
+  } catch(err) {
+    console.error('Erro ao salvar comentário:', err);
+  }
+}
+
+async function uploadFileToSupabase(file, cardId) {
+  try {
+    const ext = file.name.split('.').pop();
+    const path = `${cardId}/${uid()}.${ext}`;
+    const { error } = await sb.storage.from('posts-media').upload(path, file);
+    if (error) throw error;
+    return path;
+  } catch(err) {
+    console.error('Erro ao fazer upload:', err);
+    return null;
+  }
+}
+
+async function getFileUrl(storagePath) {
+  if (!storagePath) return null;
+  const { data } = await sb.storage.from('posts-media').createSignedUrl(storagePath, 3600);
+  return data?.signedUrl || null;
 }
 
 // ────────────────────────────────────────────
 // NAV
 // ────────────────────────────────────────────
-function changeMonth(delta) {
+async function changeMonth(delta) {
   viewMonth += delta;
   if (viewMonth > 11) { viewMonth = 0; viewYear++; }
   if (viewMonth < 0)  { viewMonth = 11; viewYear--; }
+  await loadCalendarData();
   renderCalendar();
 }
-function goToday() {
+async function goToday() {
   const t = new Date();
   viewMonth = t.getMonth(); viewYear = t.getFullYear();
+  await loadCalendarData();
   renderCalendar();
 }
 
@@ -2387,24 +2596,49 @@ function showToast(msg) {
 // ────────────────────────────────────────────
 // INIT
 // ────────────────────────────────────────────
-const savedRole = sessionStorage.getItem('userRole');
+async function initApp() {
+  // Verificar se já tem sessão ativa no Supabase
+  const { data: { session } } = await sb.auth.getSession();
 
-// Limpar sessão antiga que só tinha nome (sem role) — migração para novo sistema de login
-if (currentUser && !savedRole) {
-  sessionStorage.removeItem('userName');
-  currentUser = null;
-}
+  if (session) {
+    try {
+      const { data: perfil } = await sb.from('usuarios')
+        .select('*').eq('id', session.user.id).single();
 
-if (!currentUser) {
+      if (perfil) {
+        currentUser = perfil.nome;
+        currentUserRole = perfil.papel;
+        currentClienteId = perfil.cliente_id;
+        isAgency = perfil.papel === 'agencia';
+
+        const badge = document.getElementById('roleBadge');
+        const btn = document.getElementById('switchBtn');
+        if (badge) { badge.textContent = isAgency ? 'Agência' : 'Cliente'; badge.className = 'role-badge' + (isAgency?'':' client'); }
+        if (btn) btn.style.display = isAgency ? '' : 'none';
+
+        await loadCalendarData();
+        renderCalendar();
+        return;
+      }
+    } catch(e) { console.error(e); }
+  }
+
   showLoginScreen();
-} else {
-  if (savedRole) isAgency = savedRole === 'agency';
-  const badge = document.getElementById('roleBadge');
-  const btn = document.getElementById('switchBtn');
-  if (badge) { badge.textContent = isAgency ? 'Agência' : 'Cliente'; badge.className = 'role-badge' + (isAgency?'':' client'); }
-  if (btn) btn.style.display = isAgency ? '' : 'none';
-  renderCalendar();
 }
+
+// Adicionar botão de logout no header
+document.addEventListener('DOMContentLoaded', () => {
+  const headerRight = document.querySelector('.header-right');
+  if (headerRight) {
+    const logoutBtn = document.createElement('button');
+    logoutBtn.className = 'switch-btn';
+    logoutBtn.textContent = 'Sair';
+    logoutBtn.onclick = doLogout;
+    headerRight.appendChild(logoutBtn);
+  }
+});
+
+initApp();
 </script>
 </body>
 </html>
