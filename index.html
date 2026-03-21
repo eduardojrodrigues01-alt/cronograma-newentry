@@ -1145,19 +1145,23 @@
 
     /* Chips viram barrinhas coloridas */
     .post-chip {
-      font-size: 0;
-      height: 4px;
-      border-radius: 2px;
-      padding: 0;
-      border-left: none;
-      width: 100%;
+      font-size: 0 !important;
+      height: 5px !important;
+      min-height: 5px !important;
+      border-radius: 2px !important;
+      padding: 0 !important;
+      border-left: none !important;
+      width: 100% !important;
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
     }
-    .post-chip::before { display: none; }
-    .post-chip.approved { background: var(--ne-green); }
-    .post-chip.pending  { background: var(--ne-yellow); }
-    .post-chip.rejected { background: var(--ne-red); }
-    .post-chip.empty    { background: var(--stone-dark); }
-    .day-posts { gap: 3px; margin-top: 4px; }
+    .post-chip::before { display: none !important; }
+    .post-chip.approved { background: #5C9B3A !important; }
+    .post-chip.pending  { background: #F0A500 !important; }
+    .post-chip.rejected { background: #D9261C !important; }
+    .post-chip.empty    { background: #c8ccdb !important; }
+    .day-posts { gap: 3px; margin-top: 4px; display: flex; flex-direction: column; }
 
     /* Stats compacto */
     .stat-value { font-size: 20px; }
