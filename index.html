@@ -2069,7 +2069,7 @@ function handleCardFile(cardId, files) {
   const ctype = selectedType?.split(':')[2] || ftype;
   const reader = new FileReader();
   reader.onload = e => {
-    card.post = { type: ctype, name: file.name, src: e.target.result, emoji: ftype==='image'?'🖼️':'🎬', fileType: ftype };
+    card.post = { type: ctype, name: file.name, src: e.target.result, emoji: ftype==='image'?'🖼️':'🎬', fileType: ftype, _file: file };
     if (card.status==='empty') card.status='pending';
     logHistory(card, 'file', `Adicionou arquivo: ${file.name}`);
     card.saved = false;
@@ -2229,6 +2229,7 @@ function addToStaging(files) {
     const reader = new FileReader();
     reader.onload = e => {
       item.src = e.target.result;
+      item._file = file;
       done++;
       if (done === toRead.length) renderModalBody();
     };
@@ -2573,6 +2574,33 @@ async function doLogout() {
 // ────────────────────────────────────────────
 // SUPABASE DATA
 // ────────────────────────────────────────────
+async function loadSignedUrlsForCards() {
+  for (const dateStr of Object.keys(calendarData)) {
+    const dayData = calendarData[dateStr];
+    for (const card of (dayData.cards || [])) {
+      if (card.post && card.post.storage_path && !card.post.src) {
+        if (card.post.type === 'carousel') {
+          // Carrossel: storage_path é JSON
+          try {
+            const items = JSON.parse(card.post.storage_path);
+            for (const item of items) {
+              if (item.storage_path) {
+                const url = await getFileUrl(item.storage_path);
+                item.src = url;
+                item.emoji = item.fileType === 'image' ? '🖼️' : '🎬';
+              }
+            }
+            card.post.items = items;
+          } catch(e) {}
+        } else {
+          const url = await getFileUrl(card.post.storage_path);
+          card.post.src = url;
+        }
+      }
+    }
+  }
+}
+
 async function loadCalendarData() {
   calendarData = {};
   try {
@@ -2604,7 +2632,12 @@ async function loadCalendarData() {
       let post = null;
       if (card.posts && card.posts.length > 0) {
         const p = card.posts[0];
-        post = { type: p.tipo, name: p.nome, src: null, emoji: p.tipo==='photo'?'🖼️':p.tipo==='video'?'🎬':'🎠', storage_path: p.storage_path, db_id: p.id };
+        let postSrc = null;
+        let postItems = null;
+        if (p.tipo === 'carousel' && p.storage_path) {
+          try { postItems = JSON.parse(p.storage_path); } catch(e) {}
+        }
+        post = { type: p.tipo, name: p.nome, src: postSrc, emoji: p.tipo==='photo'?'🖼️':p.tipo==='video'?'🎬':'🎠', storage_path: p.storage_path, db_id: p.id, items: postItems };
       }
 
       calendarData[dateStr].cards.push({
@@ -2628,6 +2661,8 @@ async function loadCalendarData() {
     console.error('Erro ao carregar dados:', err);
     showToast('Erro ao carregar calendário');
   }
+  // Carregar URLs assinadas do Storage
+  await loadSignedUrlsForCards();
 }
 
 async function saveCardToSupabase(card, dateStr) {
@@ -2635,7 +2670,7 @@ async function saveCardToSupabase(card, dateStr) {
     const clienteId = isAgency ? (currentClienteId || null) : currentClienteId;
     
     if (card.db_id && card.db_id === card.id) {
-      // Update
+      // Update card
       await sb.from('cards').update({
         titulo: card.title,
         legenda: card.caption,
@@ -2644,7 +2679,7 @@ async function saveCardToSupabase(card, dateStr) {
         atualizado_em: new Date().toISOString()
       }).eq('id', card.db_id);
     } else {
-      // Insert
+      // Insert card
       const { data, error } = await sb.from('cards').insert({
         titulo: card.title,
         legenda: card.caption,
@@ -2658,6 +2693,57 @@ async function saveCardToSupabase(card, dateStr) {
       card.db_id = data.id;
       card.id = data.id;
     }
+
+    // Salvar post/arquivo no Storage e na tabela posts
+    if (card.post && card.post._file) {
+      // Tem arquivo novo para fazer upload
+      const file = card.post._file;
+      const storagePath = await uploadFileToSupabase(file, card.db_id);
+      if (storagePath) {
+        // Deletar post antigo se existir
+        if (card.post.db_id) {
+          await sb.from('posts').delete().eq('id', card.post.db_id);
+        }
+        // Inserir novo post
+        const { data: postData } = await sb.from('posts').insert({
+          card_id: card.db_id,
+          tipo: card.post.type,
+          nome: card.post.name,
+          storage_path: storagePath
+        }).select().single();
+        if (postData) {
+          card.post.db_id = postData.id;
+          card.post.storage_path = storagePath;
+        }
+        card.post._file = null; // limpar referência ao arquivo
+      }
+    } else if (card.post && card.post.items && card.post.items.some(i => i._file)) {
+      // Carrossel com arquivos novos
+      if (card.post.db_id) {
+        await sb.from('posts').delete().eq('id', card.post.db_id);
+      }
+      const uploadedItems = [];
+      for (const item of card.post.items) {
+        if (item._file) {
+          const sp = await uploadFileToSupabase(item._file, card.db_id);
+          if (sp) uploadedItems.push({ nome: item.name, storage_path: sp, fileType: item.fileType });
+          item._file = null;
+        } else if (item.storage_path) {
+          uploadedItems.push({ nome: item.name, storage_path: item.storage_path, fileType: item.fileType });
+        }
+      }
+      const { data: postData } = await sb.from('posts').insert({
+        card_id: card.db_id,
+        tipo: 'carousel',
+        nome: 'Carrossel',
+        storage_path: JSON.stringify(uploadedItems)
+      }).select().single();
+      if (postData) card.post.db_id = postData.id;
+    } else if (!card.post && card.db_id) {
+      // Post removido — deletar do banco
+      await sb.from('posts').delete().eq('card_id', card.db_id);
+    }
+
   } catch(err) {
     console.error('Erro ao salvar card:', err);
     showToast('Erro ao salvar. Tente novamente.');
