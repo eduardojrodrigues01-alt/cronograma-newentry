@@ -2052,16 +2052,34 @@ function showHistory(dateStr) {
 }
 
 // ── CARD ACTIONS ─────────────────────────────
-function deleteCard(cardId) {
+async function deleteCard(cardId) {
   const day = getDay(selectedDay);
   const card = day.cards.find(c=>c.id===cardId);
-  if (card) logHistory(card, 'delete', `Excluiu o card`);
-  // Guardar histórico no dia para não perder após remoção
+  if (!card) return;
+
+  if (!confirm('Tem certeza que deseja excluir este card?')) return;
+
+  logHistory(card, 'delete', `Excluiu o card`);
   if (!day._deletedHistory) day._deletedHistory = [];
-  if (card) day._deletedHistory.push(...(card.history||[]));
+  day._deletedHistory.push(...(card.history||[]));
   day.cards = day.cards.filter(c => c.id !== cardId);
   renderModalBody(); renderCalendar();
-  showToast('Card removido.');
+  showToast('🗑 Removendo...');
+
+  // Deletar no Supabase
+  try {
+    const dbId = card.db_id;
+    if (dbId) {
+      // Deletar posts e comentários primeiro (cascade pode não estar ativo)
+      await sb.from('posts').delete().eq('card_id', dbId);
+      await sb.from('comentarios').delete().eq('card_id', dbId);
+      await sb.from('cards').delete().eq('id', dbId);
+    }
+    showToast('Card excluído.');
+  } catch(err) {
+    console.error('Erro ao excluir card:', err);
+    showToast('Erro ao excluir. Tente novamente.');
+  }
 }
 
 function saveCaption(cardId) {
