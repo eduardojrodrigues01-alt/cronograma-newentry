@@ -996,7 +996,7 @@
     width: 60px; height: 60px; border-radius: 8px;
     background: var(--stone); flex-shrink: 0; overflow: hidden;
     display: flex; align-items: center; justify-content: center;
-    font-size: 22px; cursor: default;
+    font-size: 22px; cursor: default; position: relative;
   }
   .card-post-thumb.has-preview { cursor: zoom-in; }
   .card-post-thumb.has-preview:hover { opacity: 0.85; }
@@ -1788,8 +1788,9 @@ function renderCard(card) {
     }
 
     if (thumbContent !== null) {
+      const hasPreviewable = p.src || p.cover_src;
       postHtml = `<div class="card-post-inner">
-        <div class="${thumbClass}" onclick="${(p.src)?`openCardPreview('${card.id}')`:''}">
+        <div class="${thumbClass}" onclick="${hasPreviewable?`openCardPreview('${card.id}')`:''}">
           ${thumbContent}
         </div>
         <div class="card-post-info">
@@ -2106,19 +2107,24 @@ function handleVideoFile(cardId, field, files) {
   if (!card) return;
   if (!card._videoUpload) card._videoUpload = {};
   const reader = new FileReader();
-  reader.onload = e => {
-    if (field === 'video') {
-      card._videoUpload.videoSrc  = e.target.result;
-      card._videoUpload.videoName = file.name;
-      card._videoUpload._videoFile = file;
-    } else {
+  if (field === 'video') {
+    // Usar objectURL para vídeo — base64 entrecorta no playback
+    card._videoUpload.videoSrc  = URL.createObjectURL(file);
+    card._videoUpload.videoName = file.name;
+    card._videoUpload._videoFile = file;
+    renderModalBody();
+  } else {
+    // Capa: base64 é ok (só imagem pequena)
+    const reader = new FileReader();
+    reader.onload = e => {
       card._videoUpload.coverSrc  = e.target.result;
       card._videoUpload.coverName = file.name;
       card._videoUpload._coverFile = file;
-    }
-    renderModalBody();
-  };
-  reader.readAsDataURL(file);
+      renderModalBody();
+    };
+    reader.readAsDataURL(file);
+  }
+  return;
 }
 
 function confirmVideoCard(cardId) {
@@ -2131,7 +2137,7 @@ function confirmVideoCard(cardId) {
   card.post = {
     type: 'video',
     name: v.videoName,
-    src: v.videoSrc,
+    src: v.videoSrc,         // já é objectURL — playback sem stutter
     cover_src: v.coverSrc,
     cover_name: v.coverName,
     emoji: '🎬',
@@ -2153,16 +2159,22 @@ function handleCardFile(cardId, files) {
   const card = getDay(selectedDay).cards.find(c=>c.id===cardId);
   if (!card) return;
   const ctype = selectedType?.split(':')[2] || ftype;
-  const reader = new FileReader();
-  reader.onload = e => {
-    card.post = { type: ctype, name: file.name, src: e.target.result, emoji: ftype==='image'?'🖼️':'🎬', fileType: ftype, _file: file };
+  const readFile = (src) => {
+    card.post = { type: ctype, name: file.name, src, emoji: ftype==='image'?'🖼️':'🎬', fileType: ftype, _file: file };
     if (card.status==='empty') card.status='pending';
     logHistory(card, 'file', `Adicionou arquivo: ${file.name}`);
     card.saved = false;
     selectedType = null;
     renderModalBody(); renderCalendar(); showToast('📎 Arquivo adicionado!');
   };
-  reader.readAsDataURL(file);
+  if (ftype === 'video') {
+    // objectURL para vídeo — evita stutter no playback
+    readFile(URL.createObjectURL(file));
+  } else {
+    const reader = new FileReader();
+    reader.onload = e => readFile(e.target.result);
+    reader.readAsDataURL(file);
+  }
 }
 
 function saveCardCarousel(cardId) {
