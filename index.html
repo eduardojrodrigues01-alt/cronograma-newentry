@@ -2238,6 +2238,9 @@ function openCardPreview(cardId) {
     // Vídeo: abrir preview com capa + botão ver vídeo
     currentVideoPost = p;
     const overlay = getOrCreatePreviewOverlay();
+    // Limpar box para reconstruir os elementos do zero
+    const box = document.getElementById('previewBox');
+    if (box) box.innerHTML = '';
     renderVideoPreview(p, false);
     requestAnimationFrame(()=>overlay.classList.add('open'));
     return;
@@ -2252,29 +2255,96 @@ function openCardPreview(cardId) {
 
 function renderVideoPreview(p, showVideo) {
   const box = document.getElementById('previewBox');
+
+  // Remover elementos anteriores exceto o vídeo (reutilizar se existir)
+  const existingVid = box.querySelector('video');
+
   if (showVideo) {
-    box.innerHTML = `
-      <video src="${p.src}" controls autoplay preload="auto" playsinline
-        style="max-width:88vw;max-height:82vh;border-radius:12px;display:block;"></video>
-      <button onclick="renderVideoPreview(currentVideoPost, false)"
-        style="position:absolute;top:12px;left:12px;background:rgba(0,0,0,0.55);border:none;color:#fff;padding:6px 12px;border-radius:20px;font-size:12px;cursor:pointer;font-family:inherit">
-        🖼️ Ver capa
-      </button>
-      <button class="preview-close" onclick="closePreview()">✕</button>
-      <div class="preview-label">${p.name}</div>`;
-    const vid = box.querySelector('video');
-    if (vid) vid.play().catch(()=>{});
+    // ── MODO VÍDEO: reutilizar elemento <video> para evitar stutter ──
+    if (!existingVid) {
+      // Criar o vídeo uma única vez
+      box.innerHTML = '';
+      const vid = document.createElement('video');
+      vid.controls = true;
+      vid.autoplay = true;
+      vid.preload = 'auto';
+      vid.setAttribute('playsinline', '');
+      vid.style.cssText = 'max-width:88vw;max-height:82vh;border-radius:12px;display:block;';
+      vid.src = p.src;
+      box.appendChild(vid);
+      vid.play().catch(()=>{});
+    } else {
+      // Vídeo já existe — só atualizar src se mudou
+      if (existingVid.src !== p.src) {
+        existingVid.src = p.src;
+        existingVid.load();
+        existingVid.play().catch(()=>{});
+      }
+      // Esconder imagem da capa se existir
+      const img = box.querySelector('img');
+      if (img) img.style.display = 'none';
+      existingVid.style.display = 'block';
+    }
+    // Botão "Ver capa" + fechar + label
+    let btnCapa = box.querySelector('.btn-switch-capa');
+    if (!btnCapa) {
+      btnCapa = document.createElement('button');
+      btnCapa.className = 'btn-switch-capa';
+      btnCapa.style.cssText = 'position:absolute;top:12px;left:12px;background:rgba(0,0,0,0.55);border:none;color:#fff;padding:6px 12px;border-radius:20px;font-size:12px;cursor:pointer;font-family:inherit';
+      box.appendChild(btnCapa);
+    }
+    btnCapa.textContent = '🖼️ Ver capa';
+    btnCapa.onclick = () => renderVideoPreview(currentVideoPost, false);
+
   } else {
-    box.innerHTML = `
-      <img src="${p.cover_src}" alt="Capa"
-        style="max-width:88vw;max-height:82vh;border-radius:12px;display:block;">
-      ${p.src ? `<button onclick="renderVideoPreview(currentVideoPost, true)"
-        style="position:absolute;top:12px;left:12px;background:rgba(0,0,0,0.55);border:none;color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;font-family:inherit">
-        ▶ Ver vídeo
-      </button>` : ''}
-      <button class="preview-close" onclick="closePreview()">✕</button>
-      <div class="preview-label">${p.name}</div>`;
+    // ── MODO CAPA: mostrar imagem, esconder vídeo ──
+    if (existingVid) existingVid.style.display = 'none';
+
+    let img = box.querySelector('img.preview-cover');
+    if (!img) {
+      img = document.createElement('img');
+      img.className = 'preview-cover';
+      img.alt = 'Capa';
+      img.style.cssText = 'max-width:88vw;max-height:82vh;border-radius:12px;display:block;';
+      box.insertBefore(img, box.firstChild);
+    }
+    img.src = p.cover_src || '';
+    img.style.display = p.cover_src ? 'block' : 'none';
+
+    // Botão "Ver vídeo"
+    if (p.src) {
+      let btnVid = box.querySelector('.btn-switch-capa');
+      if (!btnVid) {
+        btnVid = document.createElement('button');
+        btnVid.className = 'btn-switch-capa';
+        btnVid.style.cssText = 'position:absolute;top:12px;left:12px;background:rgba(0,0,0,0.55);border:none;color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;font-family:inherit';
+        box.appendChild(btnVid);
+      }
+      btnVid.textContent = '▶ Ver vídeo';
+      btnVid.onclick = () => renderVideoPreview(currentVideoPost, true);
+    }
+
+    // Se não tiver capa, ir direto para o vídeo
+    if (!p.cover_src && p.src) {
+      renderVideoPreview(p, true);
+      return;
+    }
   }
+
+  // Botão fechar + label (criar uma vez)
+  if (!box.querySelector('.preview-close')) {
+    const btnClose = document.createElement('button');
+    btnClose.className = 'preview-close';
+    btnClose.textContent = '✕';
+    btnClose.onclick = closePreview;
+    box.appendChild(btnClose);
+  }
+  if (!box.querySelector('.preview-label')) {
+    const label = document.createElement('div');
+    label.className = 'preview-label';
+    box.appendChild(label);
+  }
+  box.querySelector('.preview-label').textContent = p.name;
 }
 
 let currentVideoPost = null;
