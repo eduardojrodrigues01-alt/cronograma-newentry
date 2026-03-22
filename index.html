@@ -1702,6 +1702,40 @@ function renderCard(card) {
         `</div><div style="font-size:11px;color:var(--ink-lighter)">Selecione o tipo para fazer upload</div>`;
       } else if (cType === 'carousel') {
         uploadInner = renderStagingArea(card.id);
+      } else if (cType === 'video') {
+        // Vídeo: dois campos — vídeo + foto de capa
+        const vState = card._videoUpload || {};
+        const hasVideo = !!vState.videoSrc;
+        const hasCover = !!vState.coverSrc;
+        uploadInner = `
+          <div style="display:flex;flex-direction:column;gap:10px;width:100%">
+            <div style="font-size:11px;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:0.08em">Upload de Vídeo</div>
+            <label style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px dashed ${hasVideo?'var(--green)':'var(--stone)'};border-radius:6px;background:${hasVideo?'rgba(92,155,58,0.06)':'transparent'}">
+              <div style="font-size:20px">🎬</div>
+              <div style="flex:1">
+                <div style="font-size:12px;font-weight:600;color:${hasVideo?'var(--green)':'var(--accent)'}">
+                  ${hasVideo ? '✓ ' + (vState.videoName||'Vídeo selecionado') : 'Selecionar vídeo'}
+                </div>
+                <div style="font-size:10px;color:var(--ink-lighter)">MP4, MOV</div>
+              </div>
+              <input type="file" style="display:none" accept="video/*" onchange="handleVideoFile('${card.id}','video',this.files)">
+            </label>
+            <div style="font-size:11px;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:0.08em">Foto de Capa <span style="color:var(--ne-red)">*</span></div>
+            <label style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px dashed ${hasCover?'var(--green)':'var(--stone)'};border-radius:6px;background:${hasCover?'rgba(92,155,58,0.06)':'transparent'}">
+              ${hasCover ? `<img src="${vState.coverSrc}" style="width:40px;height:40px;object-fit:cover;border-radius:4px;flex-shrink:0">` : '<div style="font-size:20px">🖼️</div>'}
+              <div style="flex:1">
+                <div style="font-size:12px;font-weight:600;color:${hasCover?'var(--green)':'var(--accent)'}">
+                  ${hasCover ? '✓ ' + (vState.coverName||'Capa selecionada') : 'Selecionar foto de capa'}
+                </div>
+                <div style="font-size:10px;color:var(--ink-lighter)">JPG, PNG, WebP</div>
+              </div>
+              <input type="file" style="display:none" accept="image/*" onchange="handleVideoFile('${card.id}','cover',this.files)">
+            </label>
+            ${hasVideo && hasCover
+              ? `<button class="btn btn-primary btn-sm" onclick="confirmVideoCard('${card.id}')">✓ Confirmar vídeo</button>`
+              : `<div style="font-size:10px;color:var(--ink-lighter);text-align:center">Selecione o vídeo e a foto de capa para continuar</div>`
+            }
+          </div>`;
       } else {
         const t = types.find(x=>x.id===cType);
         uploadInner = `<label style="cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px">
@@ -1723,8 +1757,13 @@ function renderCard(card) {
     if (p.src && p.type==='photo') {
       thumbContent = `<img src="${p.src}" style="width:100%;height:100%;object-fit:cover;">`;
       thumbClass += ' has-preview';
-    } else if (p.src && p.type==='video') {
-      thumbContent = `<video src="${p.src}" style="width:100%;height:100%;object-fit:cover;" muted></video>`;
+    } else if (p.type==='video') {
+      // Usar foto de capa como thumbnail
+      if (p.cover_src) {
+        thumbContent = `<img src="${p.cover_src}" style="width:100%;height:100%;object-fit:cover;"><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.25)"><span style="font-size:22px;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.5))">▶</span></div>`;
+      } else {
+        thumbContent = `<span>🎬</span>`;
+      }
       thumbClass += ' has-preview';
     } else if (p.type==='carousel' && p.items?.length) {
       // Strip do carrossel
@@ -2061,6 +2100,53 @@ function selectCardType(cardId, type) {
   renderModalBody();
 }
 
+function handleVideoFile(cardId, field, files) {
+  const file = files[0]; if (!file) return;
+  const card = getDay(selectedDay).cards.find(c=>c.id===cardId);
+  if (!card) return;
+  if (!card._videoUpload) card._videoUpload = {};
+  const reader = new FileReader();
+  reader.onload = e => {
+    if (field === 'video') {
+      card._videoUpload.videoSrc  = e.target.result;
+      card._videoUpload.videoName = file.name;
+      card._videoUpload._videoFile = file;
+    } else {
+      card._videoUpload.coverSrc  = e.target.result;
+      card._videoUpload.coverName = file.name;
+      card._videoUpload._coverFile = file;
+    }
+    renderModalBody();
+  };
+  reader.readAsDataURL(file);
+}
+
+function confirmVideoCard(cardId) {
+  const card = getDay(selectedDay).cards.find(c=>c.id===cardId);
+  if (!card?._videoUpload) return;
+  const v = card._videoUpload;
+  if (!v.videoSrc || !v.coverSrc) {
+    showToast('⚠️ Selecione o vídeo e a foto de capa!'); return;
+  }
+  card.post = {
+    type: 'video',
+    name: v.videoName,
+    src: v.videoSrc,
+    cover_src: v.coverSrc,
+    cover_name: v.coverName,
+    emoji: '🎬',
+    fileType: 'video',
+    _file: v._videoFile,
+    _cover_file: v._coverFile
+  };
+  card._videoUpload = null;
+  if (card.status === 'empty') card.status = 'pending';
+  logHistory(card, 'file', `Adicionou vídeo: ${v.videoName}`);
+  card.saved = false;
+  selectedType = null;
+  renderModalBody(); renderCalendar(); showToast('🎬 Vídeo e capa adicionados!');
+}
+
 function handleCardFile(cardId, files) {
   const file = files[0]; if (!file) return;
   const ftype = file.type.startsWith('image')?'image':'video';
@@ -2134,12 +2220,56 @@ function deleteCardComment(cardId, idx) {
 
 function openCardPreview(cardId) {
   const card = getDay(selectedDay).cards.find(c=>c.id===cardId);
-  if (!card?.post?.src) return;
+  if (!card?.post) return;
   const p = card.post;
+  if (p.type === 'video') {
+    // Vídeo: abrir preview com capa + botão ver vídeo
+    currentVideoPost = p;
+    const overlay = getOrCreatePreviewOverlay();
+    renderVideoPreview(p, false);
+    requestAnimationFrame(()=>overlay.classList.add('open'));
+    return;
+  }
+  if (!p.src) return;
   previewItems = [{ src:p.src, name:p.name, fileType:p.fileType||p.type, emoji:p.emoji }];
   previewIdx = 0;
   const overlay = getOrCreatePreviewOverlay();
   renderPreviewItem(previewItems[0],0,1);
+  requestAnimationFrame(()=>overlay.classList.add('open'));
+}
+
+function renderVideoPreview(p, showVideo) {
+  const box = document.getElementById('previewBox');
+  if (showVideo) {
+    box.innerHTML = `
+      <video src="${p.src}" controls autoplay preload="auto" playsinline
+        style="max-width:88vw;max-height:82vh;border-radius:12px;display:block;"></video>
+      <button onclick="renderVideoPreview(currentVideoPost, false)"
+        style="position:absolute;top:12px;left:12px;background:rgba(0,0,0,0.55);border:none;color:#fff;padding:6px 12px;border-radius:20px;font-size:12px;cursor:pointer;font-family:inherit">
+        🖼️ Ver capa
+      </button>
+      <button class="preview-close" onclick="closePreview()">✕</button>
+      <div class="preview-label">${p.name}</div>`;
+    const vid = box.querySelector('video');
+    if (vid) vid.play().catch(()=>{});
+  } else {
+    box.innerHTML = `
+      <img src="${p.cover_src}" alt="Capa"
+        style="max-width:88vw;max-height:82vh;border-radius:12px;display:block;">
+      ${p.src ? `<button onclick="renderVideoPreview(currentVideoPost, true)"
+        style="position:absolute;top:12px;left:12px;background:rgba(0,0,0,0.55);border:none;color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;font-family:inherit">
+        ▶ Ver vídeo
+      </button>` : ''}
+      <button class="preview-close" onclick="closePreview()">✕</button>
+      <div class="preview-label">${p.name}</div>`;
+  }
+}
+
+let currentVideoPost = null;
+function openVideoPreview(p) {
+  currentVideoPost = p;
+  const overlay = getOrCreatePreviewOverlay();
+  renderVideoPreview(p, false);
   requestAnimationFrame(()=>overlay.classList.add('open'));
 }
 
@@ -2391,17 +2521,50 @@ function renderPreviewItem(item, idx, total) {
   const navLeft  = total > 1 ? `<button class="preview-nav left"  onclick="previewNav(-1)">←</button>` : '';
   const navRight = total > 1 ? `<button class="preview-nav right" onclick="previewNav(1)">→</button>` : '';
   const counter  = total > 1 ? `<div class="preview-counter">${idx+1} / ${total}</div>` : '';
+
+  const isVideo = src && ftype === 'video';
+  const isImage = src && (ftype === 'image' || ftype === 'photo');
+
+  // Reutilizar elemento de vídeo existente para evitar recriação e pulo de quadros
+  const existingVideo = box.querySelector('video');
+
+  if (isVideo && existingVideo) {
+    // Só atualiza o src se mudou — evita reinicialização desnecessária
+    if (existingVideo.src !== src) {
+      existingVideo.src = src;
+      existingVideo.load();
+      existingVideo.play().catch(() => {});
+    }
+    // Atualizar só nav/counter/label sem recriar o vídeo
+    const counter_el = box.querySelector('.preview-counter');
+    const label_el = box.querySelector('.preview-label');
+    const navL = box.querySelector('.preview-nav.left');
+    const navR = box.querySelector('.preview-nav.right');
+    if (counter_el) counter_el.textContent = `${idx+1} / ${total}`;
+    if (label_el) label_el.textContent = name;
+    if (navL) navL.style.display = total > 1 ? '' : 'none';
+    if (navR) navR.style.display = total > 1 ? '' : 'none';
+    return;
+  }
+
   let media = '';
-  if (src && (ftype==='image'||ftype==='photo')) {
+  if (isImage) {
     media = `<img src="${src}" alt="${name}" style="max-width:88vw;max-height:82vh;border-radius:12px;display:block;">`;
-  } else if (src && ftype==='video') {
-    media = `<video src="${src}" controls autoplay style="max-width:88vw;max-height:82vh;border-radius:12px;display:block;"></video>`;
+  } else if (isVideo) {
+    media = `<video src="${src}" controls autoplay preload="auto" playsinline style="max-width:88vw;max-height:82vh;border-radius:12px;display:block;"></video>`;
   } else {
     media = `<div style="width:260px;height:260px;background:var(--stone);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:64px">${item.emoji||'📄'}</div>`;
   }
+
   box.innerHTML = `${counter}${navLeft}${media}${navRight}
     <button class="preview-close" onclick="closePreview()">✕</button>
     <div class="preview-label">${name}</div>`;
+
+  // Iniciar reprodução do vídeo após inserção no DOM
+  if (isVideo) {
+    const vid = box.querySelector('video');
+    if (vid) vid.play().catch(() => {});
+  }
 }
 
 let previewItems = [];
@@ -2595,6 +2758,11 @@ async function loadSignedUrlsForCards() {
         } else {
           const url = await getFileUrl(card.post.storage_path);
           card.post.src = url;
+          // Carregar URL da capa para vídeos
+          if (card.post.type === 'video' && card.post.cover_storage_path) {
+            const coverUrl = await getFileUrl(card.post.cover_storage_path);
+            card.post.cover_src = coverUrl;
+          }
         }
       }
     }
@@ -2637,7 +2805,7 @@ async function loadCalendarData() {
         if (p.tipo === 'carousel' && p.storage_path) {
           try { postItems = JSON.parse(p.storage_path); } catch(e) {}
         }
-        post = { type: p.tipo, name: p.nome, src: postSrc, emoji: p.tipo==='photo'?'🖼️':p.tipo==='video'?'🎬':'🎠', storage_path: p.storage_path, db_id: p.id, items: postItems };
+        post = { type: p.tipo, name: p.nome, src: postSrc, emoji: p.tipo==='photo'?'🖼️':p.tipo==='video'?'🎬':'🎠', storage_path: p.storage_path, cover_storage_path: p.cover_path || null, db_id: p.id, items: postItems };
       }
 
       calendarData[dateStr].cards.push({
@@ -2704,12 +2872,20 @@ async function saveCardToSupabase(card, dateStr) {
         if (card.post.db_id) {
           await sb.from('posts').delete().eq('id', card.post.db_id);
         }
+        // Upload da foto de capa (vídeo)
+        let coverPath = card.post.cover_storage_path || null;
+        if (card.post._cover_file) {
+          coverPath = await uploadFileToSupabase(card.post._cover_file, card.db_id + '_cover');
+          card.post._cover_file = null;
+          card.post.cover_storage_path = coverPath;
+        }
         // Inserir novo post
         const { data: postData } = await sb.from('posts').insert({
           card_id: card.db_id,
           tipo: card.post.type,
           nome: card.post.name,
-          storage_path: storagePath
+          storage_path: storagePath,
+          cover_path: coverPath
         }).select().single();
         if (postData) {
           card.post.db_id = postData.id;
