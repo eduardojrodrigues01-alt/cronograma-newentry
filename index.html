@@ -2874,6 +2874,8 @@ async function loadSignedUrlsForCards() {
             const coverUrl = await getFileUrl(card.post.cover_storage_path);
             card.post.cover_src = coverUrl;
           }
+          // Renderizar calendário logo que a URL estiver pronta
+          renderCalendar();
         }
       }
     }
@@ -2913,10 +2915,26 @@ async function loadCalendarData() {
         const p = card.posts[0];
         let postSrc = null;
         let postItems = null;
+        let videoStoragePath = p.storage_path;
+        let coverStoragePath = null;
+
         if (p.tipo === 'carousel' && p.storage_path) {
           try { postItems = JSON.parse(p.storage_path); } catch(e) {}
+        } else if (p.tipo === 'video' && p.storage_path) {
+          // storage_path pode ser JSON { video, cover } ou path simples
+          try {
+            const parsed = JSON.parse(p.storage_path);
+            if (parsed.video) {
+              videoStoragePath = parsed.video;
+              coverStoragePath = parsed.cover || null;
+            }
+          } catch(e) {
+            // storage_path simples (sem capa)
+            videoStoragePath = p.storage_path;
+          }
         }
-        post = { type: p.tipo, name: p.nome, src: postSrc, emoji: p.tipo==='photo'?'🖼️':p.tipo==='video'?'🎬':'🎠', storage_path: p.storage_path, cover_storage_path: p.cover_path || null, db_id: p.id, items: postItems };
+
+        post = { type: p.tipo, name: p.nome, src: postSrc, emoji: p.tipo==='photo'?'🖼️':p.tipo==='video'?'🎬':'🎠', storage_path: videoStoragePath, cover_storage_path: coverStoragePath, db_id: p.id, items: postItems };
       }
 
       calendarData[dateStr].cards.push({
@@ -2975,35 +2993,51 @@ async function saveCardToSupabase(card, dateStr) {
 
     // Salvar post/arquivo no Storage e na tabela posts
     if (card.post && card.post._file) {
-      // Tem arquivo novo para fazer upload
+      showToast('⬆️ Enviando arquivo...');
       const file = card.post._file;
       const storagePath = await uploadFileToSupabase(file, card.db_id);
-      if (storagePath) {
-        // Deletar post antigo se existir
-        if (card.post.db_id) {
-          await sb.from('posts').delete().eq('id', card.post.db_id);
-        }
-        // Upload da foto de capa (vídeo)
-        let coverPath = card.post.cover_storage_path || null;
-        if (card.post._cover_file) {
-          coverPath = await uploadFileToSupabase(card.post._cover_file, card.db_id + '_cover');
-          card.post._cover_file = null;
+      if (!storagePath) {
+        showToast('❌ Falha no upload do arquivo. Tente novamente.');
+        return;
+      }
+
+      // Para vídeo: fazer upload da capa e salvar ambos como JSON
+      let finalStoragePath = storagePath;
+      if (card.post.type === 'video' && card.post._cover_file) {
+        showToast('⬆️ Enviando foto de capa...');
+        const coverPath = await uploadFileToSupabase(card.post._cover_file, card.db_id + '_capa');
+        if (coverPath) {
+          // Armazenar vídeo + capa juntos como JSON no storage_path
+          finalStoragePath = JSON.stringify({ video: storagePath, cover: coverPath });
           card.post.cover_storage_path = coverPath;
         }
-        // Inserir novo post
-        const { data: postData } = await sb.from('posts').insert({
-          card_id: card.db_id,
-          tipo: card.post.type,
-          nome: card.post.name,
-          storage_path: storagePath,
-          cover_path: coverPath
-        }).select().single();
-        if (postData) {
-          card.post.db_id = postData.id;
-          card.post.storage_path = storagePath;
-        }
-        card.post._file = null; // limpar referência ao arquivo
+        card.post._cover_file = null;
       }
+
+      // Deletar post antigo se existir
+      if (card.post.db_id) {
+        await sb.from('posts').delete().eq('id', card.post.db_id);
+      }
+
+      // Inserir novo post
+      const { data: postData, error: postError } = await sb.from('posts').insert({
+        card_id: card.db_id,
+        tipo: card.post.type,
+        nome: card.post.name,
+        storage_path: finalStoragePath
+      }).select().single();
+
+      if (postError) {
+        console.error('Erro ao salvar post:', postError);
+        showToast('❌ Erro ao salvar post. Verifique o console.');
+        return;
+      }
+
+      if (postData) {
+        card.post.db_id = postData.id;
+        card.post.storage_path = finalStoragePath;
+      }
+      card.post._file = null;
     } else if (card.post && card.post.items && card.post.items.some(i => i._file)) {
       // Carrossel com arquivos novos
       if (card.post.db_id) {
