@@ -2125,6 +2125,10 @@ function selectCardType(cardId, type) {
 
 function handleVideoFile(cardId, field, files) {
   const file = files[0]; if (!file) return;
+  if (field === 'video' && file.size > 50 * 1024 * 1024) {
+    showToast('⚠️ Vídeo acima de 50MB. Comprima antes de enviar.');
+    return;
+  }
   const card = getDay(selectedDay).cards.find(c=>c.id===cardId);
   if (!card) return;
   if (!card._videoUpload) card._videoUpload = {};
@@ -2185,6 +2189,10 @@ function confirmVideoCard(cardId) {
 function handleCardFile(cardId, files) {
   const file = files[0]; if (!file) return;
   const ftype = file.type.startsWith('image')?'image':'video';
+  if (ftype === 'video' && file.size > 50 * 1024 * 1024) {
+    showToast('⚠️ Vídeo acima de 50MB. Comprima antes de enviar.');
+    return;
+  }
   const card = getDay(selectedDay).cards.find(c=>c.id===cardId);
   if (!card) return;
   const ctype = selectedType?.split(':')[2] || ftype;
