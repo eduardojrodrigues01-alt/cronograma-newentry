@@ -1731,10 +1731,14 @@ function renderCard(card) {
               </div>
               <input type="file" style="display:none" accept="image/*" onchange="handleVideoFile('${card.id}','cover',this.files)">
             </label>
-            ${hasVideo && hasCover
-              ? `<button class="btn btn-primary btn-sm" onclick="confirmVideoCard('${card.id}')">✓ Confirmar vídeo</button>`
-              : `<div style="font-size:10px;color:var(--ink-lighter);text-align:center">Selecione o vídeo e a foto de capa para continuar</div>`
-            }
+            <div style="font-size:10px;color:var(--ink-lighter);text-align:center;padding-top:2px">
+              ${hasVideo && hasCover
+                ? '<span style="color:var(--green)">✓ Pronto! Clique em Salvar card para confirmar.</span>'
+                : (hasVideo || hasCover)
+                  ? 'Selecione também ' + (!hasVideo ? 'o vídeo' : 'a foto de capa') + ' para continuar'
+                  : 'Selecione o vídeo e a foto de capa'
+              }
+            </div>
           </div>`;
       } else {
         const t = types.find(x=>x.id===cType);
@@ -2124,25 +2128,32 @@ function handleVideoFile(cardId, field, files) {
   const card = getDay(selectedDay).cards.find(c=>c.id===cardId);
   if (!card) return;
   if (!card._videoUpload) card._videoUpload = {};
-  const reader = new FileReader();
+
+  const tryAutoConfirm = () => {
+    const v = card._videoUpload;
+    if (v.videoSrc && v.coverSrc) {
+      // Ambos prontos — confirmar automaticamente
+      confirmVideoCard(cardId);
+    } else {
+      renderModalBody();
+    }
+  };
+
   if (field === 'video') {
-    // Usar objectURL para vídeo — base64 entrecorta no playback
-    card._videoUpload.videoSrc  = URL.createObjectURL(file);
-    card._videoUpload.videoName = file.name;
+    card._videoUpload.videoSrc   = URL.createObjectURL(file);
+    card._videoUpload.videoName  = file.name;
     card._videoUpload._videoFile = file;
-    renderModalBody();
+    tryAutoConfirm();
   } else {
-    // Capa: base64 é ok (só imagem pequena)
     const reader = new FileReader();
     reader.onload = e => {
-      card._videoUpload.coverSrc  = e.target.result;
-      card._videoUpload.coverName = file.name;
+      card._videoUpload.coverSrc   = e.target.result;
+      card._videoUpload.coverName  = file.name;
       card._videoUpload._coverFile = file;
-      renderModalBody();
+      tryAutoConfirm();
     };
     reader.readAsDataURL(file);
   }
-  return;
 }
 
 function confirmVideoCard(cardId) {
