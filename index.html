@@ -3357,10 +3357,24 @@ async function convidarCliente() {
 async function removerCliente(userId, nome) {
   if (!confirm(`Remover acesso de "${nome}"?\nO cliente não conseguirá mais fazer login.`)) return;
   try {
-    await sb.from('usuarios').delete().eq('id', userId);
-    showToast('Acesso removido.');
+    // 1. Buscar cliente_id antes de deletar
+    const { data: usr } = await sb.from('usuarios').select('cliente_id').eq('id', userId).single();
+    
+    // 2. Deletar da tabela usuarios
+    const { error } = await sb.from('usuarios').delete().eq('id', userId);
+    if (error) throw error;
+
+    // 3. Deletar da tabela clientes (se existir)
+    if (usr?.cliente_id) {
+      await sb.from('clientes').delete().eq('id', usr.cliente_id);
+    }
+
+    showToast('✅ Acesso removido.');
     carregarClientes();
-  } catch(err) { showToast('Erro ao remover.'); console.error(err); }
+  } catch(err) {
+    showToast('Erro ao remover: ' + err.message);
+    console.error(err);
+  }
 }
 </script>
 
