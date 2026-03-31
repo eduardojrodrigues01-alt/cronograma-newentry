@@ -3869,22 +3869,26 @@ async function enviarNFEmail(registroId) {
   const emissao = r.data_emissao_nf ? new Date(r.data_emissao_nf+'T00:00:00').toLocaleDateString('pt-BR') : '';
   const corpoExtra = document.getElementById('finEmailCorpo')?.value?.trim() || '';
   const nfLink = r.nf_url ? `
-Anexo NF: ${r.nf_url}` : '';
+📎 Acessar Nota Fiscal: ${r.nf_url}` : '';
 
   const subject = `NF — ${ref}${clienteNome ? ' · ' + clienteNome : ''}`;
-  const body = `Prezado(s),
-
-Segue NF referente a:
-
-Referência: ${ref}
-Cliente: ${clienteNome}
-Valor: ${valor}
-Data de emissão: ${emissao}${nfLink}
-
-${corpoExtra}
-
-Atenciosamente,
-New Entry`;
+  const body = [
+    `Prezado(s),`,
+    ``,
+    `Segue NF referente a:`,
+    ``,
+    `  Referência:    ${ref}`,
+    `  Cliente:       ${clienteNome}`,
+    `  Valor:         ${valor}`,
+    clienteNome && emissao ? `  Emissão:       ${emissao}` : null,
+    r.nf_url ? `  Nota Fiscal:   Ver anexo no link abaixo` : null,
+    ``,
+    corpoExtra || null,
+    r.nf_url ? `🔗 ${r.nf_url}` : null,
+    ``,
+    `Atenciosamente,`,
+    `New Entry`,
+  ].filter(function(l){return l!==null;}).join('\n');
 
   window.location.href = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
