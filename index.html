@@ -137,6 +137,75 @@
   }
   .switch-btn:hover { background: #D9261C; color: white; border-color: #D9261C; }
 
+  /* ── NAV TABS ── */
+  .nav-tabs {
+    background: var(--off-white);
+    border-bottom: 1px solid var(--stone);
+    display: flex;
+    gap: 0;
+    padding: 0 36px;
+  }
+  .nav-tab {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--ink-lighter);
+    background: none; border: none;
+    border-bottom: 2px solid transparent;
+    padding: 12px 20px; cursor: pointer;
+    transition: all .18s;
+  }
+  .nav-tab:hover { color: var(--ink); }
+  .nav-tab.active { color: var(--ne-red); border-bottom-color: var(--ne-red); }
+
+  /* ── SECTION PANELS ── */
+  .section-panel { display: none; }
+  .section-panel.active { display: block; }
+
+  /* ── DASHBOARD ── */
+  .dashboard-wrap { max-width: 1280px; margin: 0 auto; padding: 32px 36px; }
+  .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px,1fr)); gap: 20px; margin-bottom: 32px; }
+  .dash-card { background: var(--surface); border: 1px solid var(--stone); border-radius: var(--radius); padding: 24px; }
+  .dash-card-label { font-family:'Barlow Condensed',sans-serif; font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-lighter); margin-bottom:8px; }
+  .dash-card-value { font-family:'Barlow Condensed',sans-serif; font-size:48px; font-weight:900; line-height:1; color:var(--ink); }
+  .dash-card-sub { font-size:12px; color:var(--ink-lighter); margin-top:4px; }
+  .dash-card.approved .dash-card-value { color:var(--ne-green); }
+  .dash-card.pending .dash-card-value { color:var(--pending); }
+  .dash-card.rejected .dash-card-value { color:var(--ne-red); }
+  .dash-section-title { font-family:'Barlow Condensed',sans-serif; font-size:13px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-lighter); margin-bottom:16px; }
+  .dash-bar-wrap { background:var(--surface); border:1px solid var(--stone); border-radius:var(--radius); padding:24px; margin-bottom:24px; }
+  .dash-bar-row { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+  .dash-bar-label { font-size:12px; color:var(--ink); width:110px; flex-shrink:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .dash-bar-track { flex:1; background:var(--stone); border-radius:2px; height:8px; overflow:hidden; }
+  .dash-bar-fill { height:100%; border-radius:2px; transition:width .4s; }
+  .dash-bar-count { font-size:11px; color:var(--ink-lighter); width:30px; text-align:right; flex-shrink:0; }
+  .dash-empty { text-align:center; color:var(--ink-lighter); font-size:13px; padding:40px; }
+
+  /* ── FINANCEIRO ── */
+  .fin-wrap { max-width: 1280px; margin: 0 auto; padding: 32px 36px; }
+  .fin-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
+  .fin-title { font-family:'Barlow Condensed',sans-serif; font-size:24px; font-weight:900; color:var(--ink); letter-spacing:.02em; text-transform:uppercase; }
+  .fin-filters { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .fin-filter-select { font-family:'Barlow',sans-serif; font-size:12px; color:var(--ink); background:var(--surface); border:1px solid var(--stone-dark); border-radius:var(--radius); padding:6px 10px; cursor:pointer; }
+  .fin-table { width:100%; border-collapse:collapse; background:var(--surface); border:1px solid var(--stone); border-radius:var(--radius); overflow:hidden; margin-bottom:24px; }
+  .fin-table th { font-family:'Barlow Condensed',sans-serif; font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-lighter); background:var(--off-white); border-bottom:1px solid var(--stone); padding:10px 14px; text-align:left; }
+  .fin-table td { font-size:13px; color:var(--ink); border-bottom:1px solid var(--stone); padding:12px 14px; vertical-align:middle; }
+  .fin-table tr:last-child td { border-bottom:none; }
+  .fin-table tr:hover td { background:var(--off-white); }
+  .fin-badge { display:inline-block; font-family:'Barlow Condensed',sans-serif; font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; padding:3px 8px; border-radius:2px; }
+  .fin-badge.pago { background:var(--green-light); color:var(--ne-green); }
+  .fin-badge.pendente { background:var(--pending-light); color:var(--pending); }
+  .fin-badge.vencido { background:var(--warn-light); color:var(--ne-red); }
+  .fin-add-form { background:var(--surface); border:1px solid var(--stone); border-radius:var(--radius); padding:24px; margin-bottom:24px; }
+  .fin-add-title { font-family:'Barlow Condensed',sans-serif; font-size:13px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-lighter); margin-bottom:16px; }
+  .fin-add-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:12px; margin-bottom:16px; }
+  .fin-input { font-family:'Barlow',sans-serif; font-size:13px; color:var(--ink); background:var(--off-white); border:1px solid var(--stone-dark); border-radius:var(--radius); padding:8px 12px; width:100%; }
+  .fin-input:focus { outline:none; border-color:var(--accent); background:var(--surface); }
+  .fin-summary { display:flex; gap:20px; flex-wrap:wrap; }
+  .fin-summary-item { font-size:13px; color:var(--ink-lighter); }
+  .fin-summary-item strong { color:var(--ink); }
+
+
   /* ── LAYOUT ── */
   .app { max-width: 1280px; margin: 0 auto; padding: 32px 36px; }
 
@@ -1342,6 +1411,15 @@
   </div>
 </header>
 
+<!-- Nav Tabs -->
+<nav class="nav-tabs" id="navTabs" style="display:none">
+  <button class="nav-tab active" id="tabCronograma" onclick="showSection('cronograma')">📅 Cronograma</button>
+  <button class="nav-tab" id="tabDashboard" onclick="showSection('dashboard')">📊 Dashboard</button>
+  <button class="nav-tab" id="tabFinanceiro" onclick="showSection('financeiro')">💰 Financeiro</button>
+</nav>
+
+<!-- CRONOGRAMA -->
+<div class="section-panel active" id="sectionCronograma">
 <div class="app">
 
   <!-- Stats -->
@@ -1375,6 +1453,61 @@
       <div class="weekday weekend">Sáb</div>
     </div>
     <div class="days-grid" id="daysGrid"></div>
+  </div>
+</div>
+</div><!-- end sectionCronograma -->
+
+<!-- DASHBOARD -->
+<div class="section-panel" id="sectionDashboard">
+  <div class="dashboard-wrap">
+    <div class="dash-grid" id="dashStats"></div>
+    <div class="dash-bar-wrap" id="dashBarClientes" style="display:none">
+      <div class="dash-section-title">Posts por Cliente</div>
+      <div id="dashBarClientesBody"></div>
+    </div>
+    <div class="dash-bar-wrap" id="dashBarStatus">
+      <div class="dash-section-title">Distribuição por Status</div>
+      <div id="dashBarStatusBody"></div>
+    </div>
+  </div>
+</div>
+
+<!-- FINANCEIRO -->
+<div class="section-panel" id="sectionFinanceiro">
+  <div class="fin-wrap">
+    <div class="fin-header">
+      <div class="fin-title">Financeiro</div>
+      <div class="fin-filters">
+        <select class="fin-filter-select" id="finFiltroCliente" onchange="carregarFinanceiro()" style="display:none">
+          <option value="">Todos os clientes</option>
+        </select>
+        <select class="fin-filter-select" id="finFiltroMes" onchange="carregarFinanceiro()">
+          <option value="">Todos os meses</option>
+        </select>
+        <select class="fin-filter-select" id="finFiltroStatus" onchange="carregarFinanceiro()">
+          <option value="">Todos os status</option>
+          <option value="pendente">Pendente</option>
+          <option value="pago">Pago</option>
+          <option value="vencido">Vencido</option>
+        </select>
+      </div>
+    </div>
+    <!-- Formulário de nova cobrança (só agência) -->
+    <div class="fin-add-form" id="finAddForm" style="display:none">
+      <div class="fin-add-title">Nova Cobrança</div>
+      <div class="fin-add-grid">
+        <select class="fin-input" id="finNovoCliente">
+          <option value="">Selecionar cliente</option>
+        </select>
+        <input class="fin-input" id="finNovaDesc" type="text" placeholder="Descrição (ex: Gestão Março)">
+        <input class="fin-input" id="finNovoValor" type="number" step="0.01" placeholder="Valor (R$)">
+        <input class="fin-input" id="finNovaData" type="date" placeholder="Vencimento">
+      </div>
+      <button class="switch-btn" onclick="adicionarCobranca()" style="background:var(--ne-red);color:white;border-color:var(--ne-red)">+ Adicionar cobrança</button>
+    </div>
+    <!-- Tabela -->
+    <div id="finResumo" class="fin-summary" style="margin-bottom:16px"></div>
+    <div id="finTableWrap"></div>
   </div>
 </div>
 
@@ -1520,7 +1653,17 @@ function cardStatus(card) {
 // CALENDAR RENDER
 // ────────────────────────────────────────────
 function renderCalendar() {
+  // Mostrar aviso se agência não selecionou cliente
   const grid = document.getElementById('daysGrid');
+  if (isAgency && !currentClienteId && grid) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--ink-lighter)">
+      <div style="font-size:32px;margin-bottom:12px">👥</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;text-transform:uppercase;letter-spacing:.05em">Selecione um cliente</div>
+      <div style="font-size:13px;margin-top:6px">Use o seletor no topo para ver o cronograma de um cliente.</div>
+    </div>`;
+    renderStats();
+    return;
+  }
   grid.innerHTML = '';
 
   document.getElementById('monthTitle').textContent = `${MONTHS_PT[viewMonth]} ${viewYear}`;
@@ -1740,6 +1883,11 @@ function cancelNewCard() {
 async function confirmNewCard() {
   const val = (document.getElementById('newCardTitleInput')?.value || newCardTitle).trim();
   if (!val) { showToast('Digite um nome para o card'); return; }
+  if (isAgency && !currentClienteId) {
+    showToast('⚠️ Selecione um cliente antes de criar um card.');
+    closeModal();
+    return;
+  }
   const card = makeCard(val);
   logHistory(card, 'create', `Criou o card`);
   getDay(selectedDay).cards.push(card);
@@ -3221,6 +3369,304 @@ async function goToday() {
 }
 
 // ────────────────────────────────────────────
+// NAVIGATION
+// ────────────────────────────────────────────
+function showSection(name) {
+  ['cronograma','dashboard','financeiro'].forEach(s => {
+    document.getElementById('section' + s.charAt(0).toUpperCase() + s.slice(1))?.classList.toggle('active', s === name);
+    document.getElementById('tab' + s.charAt(0).toUpperCase() + s.slice(1))?.classList.toggle('active', s === name);
+  });
+  if (name === 'dashboard') loadDashboard();
+  if (name === 'financeiro') { carregarFinanceiro(); popularFinFiltros(); }
+}
+
+function setupNavTabs(papel) {
+  const nav = document.getElementById('navTabs');
+  if (!nav) return;
+  const tabDash = document.getElementById('tabDashboard');
+  const tabFin  = document.getElementById('tabFinanceiro');
+  const tabCrono = document.getElementById('tabCronograma');
+
+  const canCrono = ['agencia','agencia-operador','cliente-operador','cliente-completo'].includes(papel);
+  const canDash  = ['agencia','agencia-operador','cliente-operador','cliente-completo'].includes(papel);
+  const canFin   = ['agencia','cliente-financeiro','cliente-completo'].includes(papel);
+
+  if (tabCrono) tabCrono.style.display = canCrono ? '' : 'none';
+  if (tabDash)  tabDash.style.display  = canDash  ? '' : 'none';
+  if (tabFin)   tabFin.style.display   = canFin   ? '' : 'none';
+
+  nav.style.display = '';
+
+  // Se só pode ver financeiro, ir direto para lá
+  if (!canCrono && canFin) {
+    showSection('financeiro');
+  }
+}
+
+// ────────────────────────────────────────────
+// DASHBOARD
+// ────────────────────────────────────────────
+async function loadDashboard() {
+  try {
+    let query = sb.from('cards').select('*, posts(*)');
+    if (currentClienteId) query = query.eq('cliente_id', currentClienteId);
+
+    const { data: cards, error } = await query;
+    if (error) throw error;
+
+    const total    = (cards||[]).length;
+    const approved = (cards||[]).filter(c => c.status === 'approved').length;
+    const pending  = (cards||[]).filter(c => c.status === 'pending' || !c.status).length;
+    const rejected = (cards||[]).filter(c => c.status === 'rejected').length;
+    const withPost = (cards||[]).filter(c => c.posts && c.posts.length > 0).length;
+
+    // Stats cards
+    document.getElementById('dashStats').innerHTML = `
+      <div class="dash-card">
+        <div class="dash-card-label">Total de cards</div>
+        <div class="dash-card-value">${total}</div>
+        <div class="dash-card-sub">${withPost} com conteúdo</div>
+      </div>
+      <div class="dash-card approved">
+        <div class="dash-card-label">Aprovados</div>
+        <div class="dash-card-value">${approved}</div>
+        <div class="dash-card-sub">${total ? Math.round(approved/total*100) : 0}% do total</div>
+      </div>
+      <div class="dash-card pending">
+        <div class="dash-card-label">Aguardando</div>
+        <div class="dash-card-value">${pending}</div>
+        <div class="dash-card-sub">${total ? Math.round(pending/total*100) : 0}% do total</div>
+      </div>
+      <div class="dash-card rejected">
+        <div class="dash-card-label">Reprovados</div>
+        <div class="dash-card-value">${rejected}</div>
+        <div class="dash-card-sub">${total ? Math.round(rejected/total*100) : 0}% do total</div>
+      </div>`;
+
+    // Bar por status
+    const maxS = Math.max(approved, pending, rejected, 1);
+    document.getElementById('dashBarStatusBody').innerHTML = [
+      { label: 'Aprovado', count: approved, color: 'var(--ne-green)' },
+      { label: 'Aguardando', count: pending, color: 'var(--pending)' },
+      { label: 'Reprovado', count: rejected, color: 'var(--ne-red)' },
+    ].map(s => `
+      <div class="dash-bar-row">
+        <div class="dash-bar-label">${s.label}</div>
+        <div class="dash-bar-track"><div class="dash-bar-fill" style="width:${Math.round(s.count/maxS*100)}%;background:${s.color}"></div></div>
+        <div class="dash-bar-count">${s.count}</div>
+      </div>`).join('') || '<div class="dash-empty">Sem dados</div>';
+
+    // Bar por cliente (só agência sem filtro)
+    if (isAgency && !currentClienteId) {
+      const { data: clientes } = await sb.from('clientes').select('id, nome');
+      const cliBar = document.getElementById('dashBarClientes');
+      const cliBody = document.getElementById('dashBarClientesBody');
+      if (cliBar && cliBody && clientes?.length) {
+        const counts = clientes.map(c => ({
+          nome: c.nome,
+          count: (cards||[]).filter(card => card.cliente_id === c.id).length
+        })).sort((a,b) => b.count - a.count);
+        const maxC = Math.max(...counts.map(c => c.count), 1);
+        cliBody.innerHTML = counts.map(c => `
+          <div class="dash-bar-row">
+            <div class="dash-bar-label">${c.nome}</div>
+            <div class="dash-bar-track"><div class="dash-bar-fill" style="width:${Math.round(c.count/maxC*100)}%;background:var(--accent)"></div></div>
+            <div class="dash-bar-count">${c.count}</div>
+          </div>`).join('');
+        cliBar.style.display = '';
+      }
+    } else {
+      const cliBar = document.getElementById('dashBarClientes');
+      if (cliBar) cliBar.style.display = 'none';
+    }
+  } catch(e) {
+    console.error('Dashboard error:', e);
+  }
+}
+
+// ────────────────────────────────────────────
+// FINANCEIRO
+// ────────────────────────────────────────────
+async function popularFinFiltros() {
+  // Popular select de cliente no filtro e no form (só agência)
+  const selFiltro = document.getElementById('finFiltroCliente');
+  const selForm   = document.getElementById('finNovoCliente');
+  if (!isAgency) {
+    if (selFiltro) selFiltro.style.display = 'none';
+    return;
+  }
+  if (selFiltro) selFiltro.style.display = '';
+  const { data: clientes } = await sb.from('clientes').select('id, nome').order('nome');
+  const opts = (clientes||[]).map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+  if (selFiltro) selFiltro.innerHTML = '<option value="">Todos os clientes</option>' + opts;
+  if (selForm)   selForm.innerHTML   = '<option value="">Selecionar cliente</option>' + opts;
+
+  // Popular meses
+  const selMes = document.getElementById('finFiltroMes');
+  if (selMes) {
+    const meses = [];
+    const now = new Date();
+    for (let i = -6; i <= 6; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+      const val = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+      const label = d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+      meses.push(`<option value="${val}">${label}</option>`);
+    }
+    selMes.innerHTML = '<option value="">Todos os meses</option>' + meses.join('');
+    // Selecionar mês atual
+    const mesAtual = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    selMes.value = mesAtual;
+  }
+}
+
+async function carregarFinanceiro() {
+  const wrap = document.getElementById('finTableWrap');
+  const resumo = document.getElementById('finResumo');
+  if (!wrap) return;
+  wrap.innerHTML = '<div class="dash-empty">Carregando...</div>';
+
+  try {
+    let query = sb.from('financeiro').select('*, clientes(nome)').order('data_vencimento', { ascending: false });
+
+    // Filtro de cliente
+    const filtroCliente = document.getElementById('finFiltroCliente')?.value;
+    if (filtroCliente) query = query.eq('cliente_id', filtroCliente);
+    else if (!isAgency && currentClienteId) query = query.eq('cliente_id', currentClienteId);
+
+    // Filtro de mês
+    const filtroMes = document.getElementById('finFiltroMes')?.value;
+    if (filtroMes) {
+      const [ano, mes] = filtroMes.split('-');
+      const inicio = `${ano}-${mes}-01`;
+      const fim = new Date(parseInt(ano), parseInt(mes), 0);
+      const fimStr = `${ano}-${mes}-${String(fim.getDate()).padStart(2,'0')}`;
+      query = query.gte('data_vencimento', inicio).lte('data_vencimento', fimStr);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      wrap.innerHTML = '<div class="dash-empty">Nenhuma cobrança encontrada.</div>';
+      if (resumo) resumo.innerHTML = '';
+      return;
+    }
+
+    // Filtro de status (client-side por ser calculado)
+    const filtroStatus = document.getElementById('finFiltroStatus')?.value;
+    const hoje = new Date(); hoje.setHours(0,0,0,0);
+    const rows = data.map(r => {
+      const venc = new Date(r.data_vencimento + 'T00:00:00');
+      let status = r.pago ? 'pago' : (venc < hoje ? 'vencido' : 'pendente');
+      return { ...r, _status: status };
+    }).filter(r => !filtroStatus || r._status === filtroStatus);
+
+    // Resumo
+    const totalVal = rows.reduce((s, r) => s + parseFloat(r.valor||0), 0);
+    const pagosVal = rows.filter(r => r._status === 'pago').reduce((s, r) => s + parseFloat(r.valor||0), 0);
+    const pendVal  = rows.filter(r => r._status !== 'pago').reduce((s, r) => s + parseFloat(r.valor||0), 0);
+    if (resumo) resumo.innerHTML = `
+      <div class="fin-summary-item">Total: <strong>R$ ${totalVal.toFixed(2).replace('.',',')}</strong></div>
+      <div class="fin-summary-item">Pago: <strong style="color:var(--ne-green)">R$ ${pagosVal.toFixed(2).replace('.',',')}</strong></div>
+      <div class="fin-summary-item">Em aberto: <strong style="color:var(--ne-red)">R$ ${pendVal.toFixed(2).replace('.',',')}</strong></div>`;
+
+    const agencyCanEdit = isAgency;
+    const tableRows = rows.map(r => {
+      const valFmt = `R$ ${parseFloat(r.valor||0).toFixed(2).replace('.',',')}`;
+      const dataFmt = r.data_vencimento ? new Date(r.data_vencimento + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
+      const clienteNome = r.clientes?.nome || (isAgency ? '—' : '');
+      const badgeClass = r._status;
+      const badgeLabel = { pago:'Pago', pendente:'Pendente', vencido:'Vencido' }[r._status];
+      const acoesHtml = agencyCanEdit ? `
+        <button class="btn btn-ghost btn-sm" onclick="togglePago('${r.id}', ${r.pago})">${r.pago ? '↩ Desmarcar' : '✓ Marcar pago'}</button>
+        <button class="btn btn-ghost btn-sm" onclick="excluirCobranca('${r.id}')" style="color:var(--ne-red)">🗑</button>` : '';
+      return `<tr>
+        ${isAgency ? `<td>${clienteNome}</td>` : ''}
+        <td>${r.descricao||'—'}</td>
+        <td>${valFmt}</td>
+        <td>${dataFmt}</td>
+        <td><span class="fin-badge ${badgeClass}">${badgeLabel}</span></td>
+        <td>${r.observacao||''}</td>
+        ${agencyCanEdit ? `<td>${acoesHtml}</td>` : ''}
+      </tr>`;
+    }).join('');
+
+    wrap.innerHTML = `<table class="fin-table">
+      <thead><tr>
+        ${isAgency ? '<th>Cliente</th>' : ''}
+        <th>Descrição</th><th>Valor</th><th>Vencimento</th><th>Status</th><th>Obs</th>
+        ${agencyCanEdit ? '<th>Ações</th>' : ''}
+      </tr></thead>
+      <tbody>${tableRows}</tbody>
+    </table>`;
+
+  } catch(e) {
+    wrap.innerHTML = '<div class="dash-empty" style="color:var(--ne-red)">Erro ao carregar.</div>';
+    console.error(e);
+  }
+}
+
+async function adicionarCobranca() {
+  const clienteId = document.getElementById('finNovoCliente')?.value;
+  const descricao = document.getElementById('finNovaDesc')?.value?.trim();
+  const valor     = parseFloat(document.getElementById('finNovoValor')?.value);
+  const dataVenc  = document.getElementById('finNovaData')?.value;
+
+  if (!clienteId) { showToast('Selecione um cliente'); return; }
+  if (!descricao) { showToast('Informe a descrição'); return; }
+  if (!valor || valor <= 0) { showToast('Informe o valor'); return; }
+  if (!dataVenc) { showToast('Informe a data de vencimento'); return; }
+
+  try {
+    const { error } = await sb.from('financeiro').insert({
+      cliente_id: clienteId,
+      descricao,
+      valor,
+      data_vencimento: dataVenc,
+      pago: false,
+      criado_por: (await sb.auth.getUser()).data.user?.id
+    });
+    if (error) throw error;
+    document.getElementById('finNovoCliente').value = '';
+    document.getElementById('finNovaDesc').value = '';
+    document.getElementById('finNovoValor').value = '';
+    document.getElementById('finNovaData').value = '';
+    showToast('✅ Cobrança adicionada!');
+    carregarFinanceiro();
+  } catch(e) {
+    showToast('Erro: ' + e.message);
+    console.error(e);
+  }
+}
+
+async function togglePago(id, pagoAtual) {
+  try {
+    const novoPago = !pagoAtual;
+    const update = { pago: novoPago };
+    if (novoPago) update.data_pagamento = new Date().toISOString().split('T')[0];
+    else update.data_pagamento = null;
+    const { error } = await sb.from('financeiro').update(update).eq('id', id);
+    if (error) throw error;
+    showToast(novoPago ? '✅ Marcado como pago!' : 'Desmarcado.');
+    carregarFinanceiro();
+  } catch(e) {
+    showToast('Erro: ' + e.message);
+  }
+}
+
+async function excluirCobranca(id) {
+  if (!confirm('Excluir esta cobrança?')) return;
+  try {
+    const { error } = await sb.from('financeiro').delete().eq('id', id);
+    if (error) throw error;
+    showToast('Cobrança removida.');
+    carregarFinanceiro();
+  } catch(e) {
+    showToast('Erro: ' + e.message);
+  }
+}
+
+// ────────────────────────────────────────────
 // ROLE TOGGLE
 // ────────────────────────────────────────────
 function toggleRole() {
@@ -3297,6 +3743,16 @@ async function initApp() {
         const cBtn = document.getElementById('clientesBtn'); if (cBtn) cBtn.style.display = isAgency ? '' : 'none';
         const sel = document.getElementById('clienteSeletor'); if (sel) sel.style.display = isAgency ? '' : 'none';
         if (isAgency) popularSeletorCliente();
+        setupNavTabs(perfil.papel);
+        const finAddForm = document.getElementById('finAddForm');
+        if (finAddForm) finAddForm.style.display = (perfil.papel === 'agencia') ? '' : 'none';
+
+        // Se cliente-financeiro, pula o calendário
+        if (perfil.papel === 'cliente-financeiro') {
+          showSection('financeiro');
+          popularFinFiltros();
+          return;
+        }
 
         await loadCalendarData();
         renderCalendar();
@@ -3473,6 +3929,10 @@ function aplicarPerfil(perfil) {
   if (switchBtn) switchBtn.style.display = isAgency ? '' : 'none';
   if (clientesBtn) clientesBtn.style.display = (perfil.papel === 'agencia') ? '' : 'none';
   const selCliente = document.getElementById('clienteSeletor'); if (selCliente) { selCliente.style.display = isAgency ? '' : 'none'; if (isAgency) popularSeletorCliente(); }
+  setupNavTabs(perfil.papel);
+  // Mostrar form de adicionar cobrança só para agência
+  const finAddForm = document.getElementById('finAddForm');
+  if (finAddForm) finAddForm.style.display = (perfil.papel === 'agencia') ? '' : 'none';
 }
 
 async function startApp() {
