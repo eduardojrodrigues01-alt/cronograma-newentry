@@ -1398,32 +1398,34 @@
 const sb = supabase.createClient('https://peazuzkeqedzfseusrxp.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlYXp1emtlcWVkemZzZXVzcnhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMzc2ODAsImV4cCI6MjA4OTYxMzY4MH0.Bly3Ch4txJZ1VLy-8NSwE9_BW8Bm7z5k7fnkD_MtLXY');
 
 // Capturar token de magic link / reset de senha na URL
+let _authRedirectHandled = false;
+let _isRecoveryFlow = false;
+
 (async function handleAuthRedirect() {
   const hash = window.location.hash;
   if (hash && hash.includes('access_token')) {
-    // Extrair tokens da URL
     const params = new URLSearchParams(hash.substring(1));
     const accessToken = params.get('access_token');
     const refreshToken = params.get('refresh_token');
     const type = params.get('type');
 
     if (accessToken) {
-      // Definir sessão com o token
-      const { data, error } = await sb.auth.setSession({
+      await sb.auth.setSession({
         access_token: accessToken,
         refresh_token: refreshToken || ''
       });
 
-      // Limpar hash da URL
       window.history.replaceState({}, document.title, window.location.pathname);
 
       if (type === 'recovery') {
-        // Mostrar formulário de nova senha
+        _isRecoveryFlow = true;
+        _authRedirectHandled = true;
         showResetPasswordForm();
         return;
       }
     }
   }
+  _authRedirectHandled = true;
 })();
 
 function showResetPasswordForm() {
@@ -3441,6 +3443,13 @@ function aplicarPerfil(perfil) {
 }
 
 async function startApp() {
+  // Esperar o handleAuthRedirect terminar antes de iniciar
+  while (!_authRedirectHandled) {
+    await new Promise(r => setTimeout(r, 20));
+  }
+  // Se for fluxo de recuperação de senha, não iniciar o app normal
+  if (_isRecoveryFlow) return;
+
   const hasConvite = await checkConviteToken();
   if (!hasConvite) initApp();
 }
