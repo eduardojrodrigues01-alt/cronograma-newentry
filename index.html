@@ -238,7 +238,9 @@
   /* Add form */
   .fin-add-form { background:var(--surface); border:1px solid var(--stone); border-radius:var(--radius); padding:20px 24px; margin-bottom:20px; }
   .fin-add-title { font-family:'Barlow Condensed',sans-serif; font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-lighter); margin-bottom:14px; }
-  .fin-add-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(160px,1fr)); gap:10px; margin-bottom:14px; }
+  .fin-add-grid { display:grid; grid-template-columns:2fr 1fr 1fr 1fr 2fr; gap:10px; margin-bottom:14px; }
+  .fin-add-field { display:flex; flex-direction:column; gap:4px; }
+  .fin-add-label { font-family:'Barlow Condensed',sans-serif; font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-lighter); }
   .fin-input { font-family:'Barlow',sans-serif; font-size:13px; color:var(--ink); background:var(--off-white); border:1px solid var(--stone-dark); border-radius:var(--radius); padding:8px 12px; width:100%; }
   .fin-input:focus { outline:none; border-color:var(--accent); background:var(--surface); }
   .fin-summary { display:flex; gap:20px; flex-wrap:wrap; margin-bottom:16px; }
@@ -1560,15 +1562,30 @@
       <div class="fin-add-title">Nova entrada
         <span id="finAddClienteNome" style="font-weight:400;color:var(--ink);text-transform:none;letter-spacing:0;margin-left:8px;font-family:'Barlow',sans-serif;font-size:13px"></span>
       </div>
+      <select class="fin-input" id="finNovoCliente" style="display:none">
+        <option value="">Selecionar cliente</option>
+      </select>
       <div class="fin-add-grid">
-        <select class="fin-input" id="finNovoCliente" style="display:none">
-          <option value="">Selecionar cliente</option>
-        </select>
-        <input class="fin-input" id="finNovaRef" type="text" placeholder="Referência (ex: Gestão Mídias Março)">
-        <input class="fin-input" id="finNovaEmissao" type="date" title="Data de emissão da NF">
-        <input class="fin-input" id="finNovaPagamento" type="date" title="Data de pagamento">
-        <input class="fin-input" id="finNovoValor" type="number" step="0.01" placeholder="Valor (R$)">
-        <input class="fin-input" id="finNovaObs" type="text" placeholder="Observações">
+        <div class="fin-add-field">
+          <span class="fin-add-label">Referência</span>
+          <input class="fin-input" id="finNovaRef" type="text" placeholder="Ex: Gestão Mídias Março">
+        </div>
+        <div class="fin-add-field">
+          <span class="fin-add-label">Emissão NF</span>
+          <input class="fin-input" id="finNovaEmissao" type="date">
+        </div>
+        <div class="fin-add-field">
+          <span class="fin-add-label">Pagamento</span>
+          <input class="fin-input" id="finNovaPagamento" type="date">
+        </div>
+        <div class="fin-add-field">
+          <span class="fin-add-label">Valor (R$)</span>
+          <input class="fin-input" id="finNovoValor" type="number" step="0.01" placeholder="0,00">
+        </div>
+        <div class="fin-add-field">
+          <span class="fin-add-label">Observações</span>
+          <input class="fin-input" id="finNovaObs" type="text" placeholder="Opcional">
+        </div>
       </div>
       <button class="switch-btn" onclick="adicionarCobranca()" style="background:var(--ne-red);color:white;border-color:var(--ne-red)">+ Adicionar</button>
     </div>
