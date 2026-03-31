@@ -1557,9 +1557,11 @@
 
     <!-- NOVA COBRANÇA (só agência) -->
     <div class="fin-add-form" id="finAddForm" style="display:none">
-      <div class="fin-add-title">Nova entrada</div>
+      <div class="fin-add-title">Nova entrada
+        <span id="finAddClienteNome" style="font-weight:400;color:var(--ink);text-transform:none;letter-spacing:0;margin-left:8px;font-family:'Barlow',sans-serif;font-size:13px"></span>
+      </div>
       <div class="fin-add-grid">
-        <select class="fin-input" id="finNovoCliente">
+        <select class="fin-input" id="finNovoCliente" style="display:none">
           <option value="">Selecionar cliente</option>
         </select>
         <input class="fin-input" id="finNovaRef" type="text" placeholder="Referência (ex: Gestão Mídias Março)">
@@ -3572,7 +3574,22 @@ async function popularFinFiltros() {
   const { data: clientes } = await sb.from('clientes').select('id, nome').order('nome');
   const opts = (clientes||[]).map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
   if (selFiltro) selFiltro.innerHTML = '<option value="">Todos os clientes</option>' + opts;
-  if (selForm)   selForm.innerHTML   = '<option value="">Selecionar cliente</option>' + opts;
+  if (selForm) {
+    selForm.innerHTML = '<option value="">Selecionar cliente</option>' + opts;
+    // Se já tem cliente no contexto, pré-selecionar e esconder o select
+    const nomeEl = document.getElementById('finAddClienteNome');
+    if (currentClienteId) {
+      selForm.value = currentClienteId;
+      selForm.style.display = 'none';
+      if (nomeEl) {
+        const clienteOpt = [...selForm.options].find(o => o.value === currentClienteId);
+        nomeEl.textContent = clienteOpt ? '— ' + clienteOpt.text : '';
+      }
+    } else {
+      selForm.style.display = '';
+      if (nomeEl) nomeEl.textContent = '';
+    }
+  }
 
   const selMes = document.getElementById('finFiltroMes');
   if (selMes) {
@@ -3741,7 +3758,7 @@ async function carregarFinanceiro() {
 
 // ── ADICIONAR ──
 async function adicionarCobranca() {
-  const clienteId  = document.getElementById('finNovoCliente')?.value;
+  const clienteId  = document.getElementById('finNovoCliente')?.value || currentClienteId;
   const referencia = document.getElementById('finNovaRef')?.value?.trim();
   const emissao    = document.getElementById('finNovaEmissao')?.value;
   const pagamento  = document.getElementById('finNovaPagamento')?.value;
