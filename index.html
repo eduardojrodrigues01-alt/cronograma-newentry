@@ -1467,9 +1467,16 @@ async function doResetPassword() {
     errorEl.style.display = 'block'; return;
   }
 
+  // Verificar se há sessão ativa antes de tentar salvar
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) {
+    errorEl.textContent = 'Sessão expirada. Solicite um novo link de recuperação de senha.';
+    errorEl.style.display = 'block'; return;
+  }
+
   const { error } = await sb.auth.updateUser({ password: newPass });
   if (error) {
-    errorEl.textContent = 'Erro ao salvar senha. Tente novamente.';
+    errorEl.textContent = 'Erro: ' + error.message;
     errorEl.style.display = 'block'; return;
   }
 
