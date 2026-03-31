@@ -3804,7 +3804,8 @@ async function adicionarCobranca() {
     showToast('✅ Entrada adicionada!');
     carregarFinanceiro();
   } catch(e) {
-    showToast('Erro: ' + e.message);
+    console.error('adicionarCobranca error:', JSON.stringify(e));
+    showToast('Erro: ' + (e.message || JSON.stringify(e)));
   }
 }
 
