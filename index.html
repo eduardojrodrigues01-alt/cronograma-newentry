@@ -3799,7 +3799,7 @@ async function checkConviteToken() {
     }
 
     // Mostrar tela de cadastro com dados do convite
-    showSignupScreen(token, convite.papel, null);
+    showSignupScreen(token, convite.papel, null, convite.cliente_id);
     return true;
   } catch(err) {
     console.error('Erro ao verificar convite:', err);
@@ -3878,12 +3878,15 @@ async function doSignup(token, papel) {
     if (!authData.user) throw new Error('Erro ao criar usuário.');
     const userId = authData.user.id;
 
-    // 2. Criar cliente se for papel de cliente
+    // 2. Buscar cliente_id do convite (cliente já foi criado previamente pela agência)
     let clienteId = null;
-    if (papel.startsWith('cliente')) {
-      const { data: clienteData, error: clienteError } = await sb.from('clientes').insert({ nome }).select().single();
-      if (clienteError) throw clienteError;
-      clienteId = clienteData.id;
+    if (token) {
+      const { data: conviteData } = await sb.from('convites').select('cliente_id').eq('token', token).single();
+      clienteId = conviteData?.cliente_id || null;
+    }
+    // Fallback: se for papel cliente e não tiver cliente_id no convite, é erro
+    if (papel.startsWith('cliente') && !clienteId) {
+      throw new Error('Este convite não está vinculado a nenhuma empresa. Solicite um novo link à agência.');
     }
 
     // 3. Inserir em usuarios
@@ -3952,13 +3955,25 @@ startApp();
       <button class="modal-close" onclick="closeClientesModal()">✕</button>
     </div>
     <div class="clientes-body">
+
+      <!-- CRIAR CLIENTE -->
+      <div class="cliente-form">
+        <h3>Criar novo cliente</h3>
+        <div class="cliente-form-row" style="gap:8px">
+          <input type="text" id="novoClienteEmpresaNome" placeholder="Nome da empresa (ex: Font Life)" style="flex:1" />
+          <button class="btn btn-primary btn-sm" onclick="criarCliente()" id="btnCriarCliente">＋ Criar</button>
+        </div>
+        <div id="clienteCriadoResultado"></div>
+      </div>
+
+      <!-- GERAR CONVITE -->
       <div class="cliente-form">
         <h3>Gerar link de convite</h3>
-        <div class="cliente-form-row">
-          <input type="text" id="novoClienteNome" placeholder="Nome (para identificar o convite)" />
-        </div>
         <div class="cliente-form-row" style="flex-direction:column;gap:8px">
-          <select id="novoClientePapel" style="flex:1;padding:8px 12px;border:1px solid var(--stone);border-radius:6px;font-size:13px;font-family:inherit;background:var(--off-white);color:var(--ink)">
+          <select id="conviteClienteId" style="padding:8px 12px;border:1px solid var(--stone);border-radius:6px;font-size:13px;font-family:inherit;background:var(--off-white);color:var(--ink)">
+            <option value="">— Selecionar empresa (opcional para agência) —</option>
+          </select>
+          <select id="novoClientePapel" style="padding:8px 12px;border:1px solid var(--stone);border-radius:6px;font-size:13px;font-family:inherit;background:var(--off-white);color:var(--ink)">
             <optgroup label="Agência">
               <option value="agencia-operador">Agência — Operador (crono + dashboard)</option>
             </optgroup>
@@ -3968,16 +3983,20 @@ startApp();
               <option value="cliente-completo">Cliente — Completo (tudo)</option>
             </optgroup>
           </select>
+          <input type="text" id="novoClienteNome" placeholder="Nome do usuário (para identificar o convite)" />
           <button class="btn btn-primary btn-sm" onclick="gerarLinkConvite()" id="btnConvidar" style="align-self:flex-start">🔗 Gerar link</button>
         </div>
         <div id="clienteResultado"></div>
       </div>
+
+      <!-- LISTA -->
       <div>
         <div style="font-size:13px;font-weight:700;color:var(--ink-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px">Clientes cadastrados</div>
         <div class="cliente-list" id="clienteList">
           <div style="color:var(--ink-lighter);font-size:13px;text-align:center;padding:16px">Carregando...</div>
         </div>
       </div>
+
     </div>
   </div>
 </div>
@@ -3987,8 +4006,39 @@ startApp();
 function openClientesModal() {
   document.getElementById('clientesOverlay').classList.add('open');
   document.getElementById('novoClienteNome').value = '';
+  document.getElementById('novoClienteEmpresaNome').value = '';
   document.getElementById('clienteResultado').innerHTML = '';
+  document.getElementById('clienteCriadoResultado').innerHTML = '';
   carregarClientes();
+  popularConviteClienteSelect();
+}
+
+async function popularConviteClienteSelect() {
+  const sel = document.getElementById('conviteClienteId');
+  if (!sel) return;
+  const { data } = await sb.from('clientes').select('id, nome').order('nome');
+  sel.innerHTML = '<option value="">— Selecionar empresa (opcional para agência) —</option>' +
+    (data||[]).map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+}
+
+async function criarCliente() {
+  const nome = document.getElementById('novoClienteEmpresaNome')?.value?.trim();
+  const res  = document.getElementById('clienteCriadoResultado');
+  const btn  = document.getElementById('btnCriarCliente');
+  if (!nome) { res.innerHTML = '<div style="color:var(--ne-red);font-size:12px;margin-top:6px">Informe o nome da empresa.</div>'; return; }
+  btn.disabled = true; btn.textContent = 'Criando...';
+  try {
+    const { data, error } = await sb.from('clientes').insert({ nome }).select().single();
+    if (error) throw error;
+    res.innerHTML = `<div style="color:var(--ne-green);font-size:12px;margin-top:6px">✅ Cliente "${nome}" criado!</div>`;
+    document.getElementById('novoClienteEmpresaNome').value = '';
+    carregarClientes();
+    popularConviteClienteSelect();
+    popularSeletorCliente();
+  } catch(e) {
+    res.innerHTML = `<div style="color:var(--ne-red);font-size:12px;margin-top:6px">Erro: ${e.message}</div>`;
+  }
+  btn.disabled = false; btn.textContent = '＋ Criar';
 }
 function closeClientesModal() {
   document.getElementById('clientesOverlay').classList.remove('open');
@@ -4045,11 +4095,14 @@ function gerarSenha() {
   return Array.from({length:10}, ()=>chars[Math.floor(Math.random()*chars.length)]).join('');
 }
 async function gerarLinkConvite() {
-  const nome  = document.getElementById('novoClienteNome').value.trim();
-  const papel = document.getElementById('novoClientePapel').value;
-  const res   = document.getElementById('clienteResultado');
-  const btn   = document.getElementById('btnConvidar');
-  if (!nome) { res.innerHTML='<div style="color:var(--ne-red);font-size:12px;margin-top:8px">Preencha o nome para identificar o convite.</div>'; return; }
+  const nome      = document.getElementById('novoClienteNome').value.trim();
+  const papel     = document.getElementById('novoClientePapel').value;
+  const clienteId = document.getElementById('conviteClienteId')?.value || null;
+  const res       = document.getElementById('clienteResultado');
+  const btn       = document.getElementById('btnConvidar');
+  if (!nome) { res.innerHTML='<div style="color:var(--ne-red);font-size:12px;margin-top:8px">Preencha o nome do usuário para identificar o convite.</div>'; return; }
+  // Papéis de cliente exigem empresa
+  if (papel.startsWith('cliente') && !clienteId) { res.innerHTML='<div style="color:var(--ne-red);font-size:12px;margin-top:8px">Selecione a empresa do cliente.</div>'; return; }
   btn.disabled=true; btn.textContent='Gerando...'; res.innerHTML='';
   try {
     // Gerar token único
@@ -4061,6 +4114,7 @@ async function gerarLinkConvite() {
       token,
       papel,
       nome_ref: nome,
+      cliente_id: clienteId,
       expira_em: expira,
       usado: false
     });
