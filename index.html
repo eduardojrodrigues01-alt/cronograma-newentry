@@ -3816,17 +3816,33 @@ async function uploadNF(registroId, input) {
   showToast('Enviando NF...');
   try {
     const ext = file.name.split('.').pop();
-    const path = `nf/${registroId}.${ext}`;
-    const { error: upErr } = await sb.storage.from('posts-media').upload(path, file, { upsert: true });
-    if (upErr) throw upErr;
-    const { data: urlData } = sb.storage.from('posts-media').getPublicUrl(path);
-    const nf_url = urlData.publicUrl;
+    const path = `nf-${registroId}.${ext}`;
+
+    // Tentar remover arquivo anterior se existir
+    await sb.storage.from('posts-media').remove([path]).catch(() => {});
+
+    const { data: upData, error: upErr } = await sb.storage
+      .from('posts-media')
+      .upload(path, file, { cacheControl: '3600', upsert: true, contentType: file.type });
+
+    if (upErr) {
+      console.error('Upload error:', JSON.stringify(upErr));
+      throw new Error(upErr.message || JSON.stringify(upErr));
+    }
+
+    // Gerar URL assinada válida por 3 anos
+    const { data: signedData, error: signErr } = await sb.storage
+      .from('posts-media')
+      .createSignedUrl(path, 60 * 60 * 24 * 365 * 3);
+
+    const nf_url = signedData?.signedUrl || upData?.path;
     const { error: dbErr } = await sb.from('financeiro').update({ nf_url }).eq('id', registroId);
     if (dbErr) throw dbErr;
     showToast('✅ NF anexada!');
     carregarFinanceiro();
   } catch(e) {
-    showToast('Erro ao enviar NF: ' + e.message);
+    showToast('Erro ao enviar NF: ' + (e.message || JSON.stringify(e)));
+    console.error('uploadNF error:', e);
   }
 }
 
