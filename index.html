@@ -182,28 +182,47 @@
   .dash-empty { text-align:center; color:var(--ink-lighter); font-size:13px; padding:40px; }
 
   /* ── FINANCEIRO ── */
-  .fin-wrap { max-width: 1280px; margin: 0 auto; padding: 32px 36px; }
-  .fin-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
+  .fin-wrap { max-width: 1400px; margin: 0 auto; padding: 32px 36px; }
+  .fin-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
   .fin-title { font-family:'Barlow Condensed',sans-serif; font-size:24px; font-weight:900; color:var(--ink); letter-spacing:.02em; text-transform:uppercase; }
   .fin-filters { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
   .fin-filter-select { font-family:'Barlow',sans-serif; font-size:12px; color:var(--ink); background:var(--surface); border:1px solid var(--stone-dark); border-radius:var(--radius); padding:6px 10px; cursor:pointer; }
+  /* Email panel */
+  .fin-email-panel { background:var(--surface); border:1px solid var(--stone); border-radius:var(--radius); padding:20px 24px; margin-bottom:20px; }
+  .fin-email-panel-title { font-family:'Barlow Condensed',sans-serif; font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-lighter); margin-bottom:14px; }
+  .fin-email-list { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+  .fin-email-chip { display:flex; align-items:center; gap:6px; background:var(--off-white); border:1px solid var(--stone); border-radius:2px; padding:5px 10px; font-size:12px; cursor:pointer; user-select:none; }
+  .fin-email-chip input[type=checkbox] { cursor:pointer; }
+  .fin-email-chip.checked { background:var(--accent-light); border-color:var(--accent); }
+  .fin-email-add { display:flex; gap:8px; align-items:center; }
+  .fin-email-input { font-family:'Barlow',sans-serif; font-size:12px; color:var(--ink); background:var(--off-white); border:1px solid var(--stone-dark); border-radius:var(--radius); padding:6px 10px; }
+  .fin-email-body { width:100%; margin-top:10px; font-family:'Barlow',sans-serif; font-size:12px; color:var(--ink); background:var(--off-white); border:1px solid var(--stone-dark); border-radius:var(--radius); padding:8px 10px; resize:vertical; min-height:60px; }
+  .fin-email-body:focus, .fin-email-input:focus { outline:none; border-color:var(--accent); background:var(--surface); }
+  /* Table */
   .fin-table { width:100%; border-collapse:collapse; background:var(--surface); border:1px solid var(--stone); border-radius:var(--radius); overflow:hidden; margin-bottom:24px; }
-  .fin-table th { font-family:'Barlow Condensed',sans-serif; font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-lighter); background:var(--off-white); border-bottom:1px solid var(--stone); padding:10px 14px; text-align:left; }
-  .fin-table td { font-size:13px; color:var(--ink); border-bottom:1px solid var(--stone); padding:12px 14px; vertical-align:middle; }
+  .fin-table th { font-family:'Barlow Condensed',sans-serif; font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-lighter); background:var(--off-white); border-bottom:1px solid var(--stone); padding:10px 14px; text-align:left; white-space:nowrap; }
+  .fin-table td { font-size:13px; color:var(--ink); border-bottom:1px solid var(--stone); padding:10px 14px; vertical-align:middle; }
   .fin-table tr:last-child td { border-bottom:none; }
   .fin-table tr:hover td { background:var(--off-white); }
+  .fin-table td input, .fin-table td textarea { font-family:'Barlow',sans-serif; font-size:12px; color:var(--ink); background:transparent; border:none; border-bottom:1px dashed var(--stone-dark); width:100%; padding:2px 4px; outline:none; }
+  .fin-table td input:focus, .fin-table td textarea:focus { border-bottom-color:var(--accent); background:var(--accent-light); border-radius:2px; }
   .fin-badge { display:inline-block; font-family:'Barlow Condensed',sans-serif; font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; padding:3px 8px; border-radius:2px; }
   .fin-badge.pago { background:var(--green-light); color:var(--ne-green); }
   .fin-badge.pendente { background:var(--pending-light); color:var(--pending); }
   .fin-badge.vencido { background:var(--warn-light); color:var(--ne-red); }
-  .fin-add-form { background:var(--surface); border:1px solid var(--stone); border-radius:var(--radius); padding:24px; margin-bottom:24px; }
-  .fin-add-title { font-family:'Barlow Condensed',sans-serif; font-size:13px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-lighter); margin-bottom:16px; }
-  .fin-add-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:12px; margin-bottom:16px; }
+  /* Add form */
+  .fin-add-form { background:var(--surface); border:1px solid var(--stone); border-radius:var(--radius); padding:20px 24px; margin-bottom:20px; }
+  .fin-add-title { font-family:'Barlow Condensed',sans-serif; font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-lighter); margin-bottom:14px; }
+  .fin-add-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(160px,1fr)); gap:10px; margin-bottom:14px; }
   .fin-input { font-family:'Barlow',sans-serif; font-size:13px; color:var(--ink); background:var(--off-white); border:1px solid var(--stone-dark); border-radius:var(--radius); padding:8px 12px; width:100%; }
   .fin-input:focus { outline:none; border-color:var(--accent); background:var(--surface); }
-  .fin-summary { display:flex; gap:20px; flex-wrap:wrap; }
+  .fin-summary { display:flex; gap:20px; flex-wrap:wrap; margin-bottom:16px; }
   .fin-summary-item { font-size:13px; color:var(--ink-lighter); }
   .fin-summary-item strong { color:var(--ink); }
+  .fin-nf-btn { background:none; border:none; cursor:pointer; font-size:16px; padding:2px 4px; opacity:.7; transition:.15s; }
+  .fin-nf-btn:hover { opacity:1; }
+  .fin-action-btn { background:none; border:none; cursor:pointer; font-size:13px; color:var(--ink-lighter); padding:3px 6px; border-radius:2px; transition:.15s; white-space:nowrap; }
+  .fin-action-btn:hover { color:var(--ink); background:var(--stone); }
 
 
   /* ── LAYOUT ── */
@@ -1475,8 +1494,10 @@
 <!-- FINANCEIRO -->
 <div class="section-panel" id="sectionFinanceiro">
   <div class="fin-wrap">
-    <div class="fin-header">
-      <div class="fin-title">Financeiro</div>
+
+    <!-- TOPO: filtros + título -->
+    <div class="fin-top">
+      <div class="fin-title">Notas Fiscais</div>
       <div class="fin-filters">
         <select class="fin-filter-select" id="finFiltroCliente" onchange="carregarFinanceiro()" style="display:none">
           <option value="">Todos os clientes</option>
@@ -1492,21 +1513,38 @@
         </select>
       </div>
     </div>
-    <!-- Formulário de nova cobrança (só agência) -->
+
+    <!-- EMAILS (só agência) -->
+    <div class="fin-email-panel" id="finEmailPanel" style="display:none">
+      <div class="fin-email-panel-title">📧 Destinatários do email de NF</div>
+      <div class="fin-email-list" id="finEmailList"></div>
+      <div class="fin-email-add">
+        <input class="fin-email-input" id="finNovoEmailAddr" type="email" placeholder="email@exemplo.com" style="width:220px">
+        <input class="fin-email-input" id="finNovoEmailNome" type="text" placeholder="Nome (opcional)" style="width:160px">
+        <button class="fin-action-btn" onclick="adicionarEmailFin()" style="color:var(--accent);font-weight:700">＋ Adicionar</button>
+      </div>
+      <div class="fin-email-panel-title" style="margin-top:14px;margin-bottom:6px">Corpo do email (opcional)</div>
+      <textarea class="fin-email-body" id="finEmailCorpo" placeholder="Texto adicional que aparecerá no corpo do email ao enviar NF..."></textarea>
+    </div>
+
+    <!-- NOVA COBRANÇA (só agência) -->
     <div class="fin-add-form" id="finAddForm" style="display:none">
-      <div class="fin-add-title">Nova Cobrança</div>
+      <div class="fin-add-title">Nova entrada</div>
       <div class="fin-add-grid">
         <select class="fin-input" id="finNovoCliente">
           <option value="">Selecionar cliente</option>
         </select>
-        <input class="fin-input" id="finNovaDesc" type="text" placeholder="Descrição (ex: Gestão Março)">
+        <input class="fin-input" id="finNovaRef" type="text" placeholder="Referência (ex: Gestão Mídias Março)">
+        <input class="fin-input" id="finNovaEmissao" type="date" title="Data de emissão da NF">
+        <input class="fin-input" id="finNovaPagamento" type="date" title="Data de pagamento">
         <input class="fin-input" id="finNovoValor" type="number" step="0.01" placeholder="Valor (R$)">
-        <input class="fin-input" id="finNovaData" type="date" placeholder="Vencimento">
+        <input class="fin-input" id="finNovaObs" type="text" placeholder="Observações">
       </div>
-      <button class="switch-btn" onclick="adicionarCobranca()" style="background:var(--ne-red);color:white;border-color:var(--ne-red)">+ Adicionar cobrança</button>
+      <button class="switch-btn" onclick="adicionarCobranca()" style="background:var(--ne-red);color:white;border-color:var(--ne-red)">+ Adicionar</button>
     </div>
-    <!-- Tabela -->
-    <div id="finResumo" class="fin-summary" style="margin-bottom:16px"></div>
+
+    <!-- RESUMO + TABELA -->
+    <div id="finResumo" class="fin-summary"></div>
     <div id="finTableWrap"></div>
   </div>
 </div>
@@ -3488,20 +3526,26 @@ async function loadDashboard() {
 // FINANCEIRO
 // ────────────────────────────────────────────
 async function popularFinFiltros() {
-  // Popular select de cliente no filtro e no form (só agência)
   const selFiltro = document.getElementById('finFiltroCliente');
   const selForm   = document.getElementById('finNovoCliente');
+  const emailPanel = document.getElementById('finEmailPanel');
+  const addForm    = document.getElementById('finAddForm');
+
   if (!isAgency) {
     if (selFiltro) selFiltro.style.display = 'none';
-    return;
+    if (emailPanel) emailPanel.style.display = 'none';
+    if (addForm) addForm.style.display = 'none';
+  } else {
+    if (selFiltro) selFiltro.style.display = '';
+    if (emailPanel) emailPanel.style.display = '';
+    if (addForm) addForm.style.display = '';
   }
-  if (selFiltro) selFiltro.style.display = '';
+
   const { data: clientes } = await sb.from('clientes').select('id, nome').order('nome');
   const opts = (clientes||[]).map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
   if (selFiltro) selFiltro.innerHTML = '<option value="">Todos os clientes</option>' + opts;
   if (selForm)   selForm.innerHTML   = '<option value="">Selecionar cliente</option>' + opts;
 
-  // Popular meses
   const selMes = document.getElementById('finFiltroMes');
   if (selMes) {
     const meses = [];
@@ -3513,12 +3557,55 @@ async function popularFinFiltros() {
       meses.push(`<option value="${val}">${label}</option>`);
     }
     selMes.innerHTML = '<option value="">Todos os meses</option>' + meses.join('');
-    // Selecionar mês atual
     const mesAtual = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
     selMes.value = mesAtual;
   }
+
+  // Carregar emails cadastrados
+  await carregarEmailsFin();
 }
 
+// ── EMAILS DESTINATÁRIOS ──
+async function carregarEmailsFin() {
+  const list = document.getElementById('finEmailList');
+  if (!list) return;
+  const { data } = await sb.from('emails_financeiro').select('*').order('criado_em');
+  if (!data || data.length === 0) {
+    list.innerHTML = '<span style="font-size:12px;color:var(--ink-lighter)">Nenhum destinatário cadastrado ainda.</span>';
+    return;
+  }
+  list.innerHTML = data.map(e => `
+    <label class="fin-email-chip ${e.ativo ? 'checked' : ''}" onclick="toggleEmailFin('${e.id}', ${e.ativo})">
+      <input type="checkbox" ${e.ativo ? 'checked' : ''} onclick="event.stopPropagation();toggleEmailFin('${e.id}', ${e.ativo})">
+      <span>${e.nome ? e.nome + ' &lt;' + e.email + '&gt;' : e.email}</span>
+      <button onclick="event.stopPropagation();excluirEmailFin('${e.id}')" style="background:none;border:none;cursor:pointer;color:var(--ink-lighter);font-size:11px;padding:0 2px;line-height:1">✕</button>
+    </label>`).join('');
+}
+
+async function adicionarEmailFin() {
+  const email = document.getElementById('finNovoEmailAddr')?.value?.trim();
+  const nome  = document.getElementById('finNovoEmailNome')?.value?.trim();
+  if (!email || !email.includes('@')) { showToast('Informe um email válido'); return; }
+  const { error } = await sb.from('emails_financeiro').insert({ email, nome: nome||null, ativo: true });
+  if (error) { showToast('Erro: ' + error.message); return; }
+  document.getElementById('finNovoEmailAddr').value = '';
+  document.getElementById('finNovoEmailNome').value = '';
+  await carregarEmailsFin();
+  showToast('Email adicionado!');
+}
+
+async function toggleEmailFin(id, ativoAtual) {
+  await sb.from('emails_financeiro').update({ ativo: !ativoAtual }).eq('id', id);
+  await carregarEmailsFin();
+}
+
+async function excluirEmailFin(id) {
+  if (!confirm('Remover este destinatário?')) return;
+  await sb.from('emails_financeiro').delete().eq('id', id);
+  await carregarEmailsFin();
+}
+
+// ── CARREGAR TABELA ──
 async function carregarFinanceiro() {
   const wrap = document.getElementById('finTableWrap');
   const resumo = document.getElementById('finResumo');
@@ -3526,38 +3613,29 @@ async function carregarFinanceiro() {
   wrap.innerHTML = '<div class="dash-empty">Carregando...</div>';
 
   try {
-    let query = sb.from('financeiro').select('*, clientes(nome)').order('data_vencimento', { ascending: false });
+    let query = sb.from('financeiro').select('*, clientes(nome)').order('data_emissao_nf', { ascending: false });
 
-    // Filtro de cliente
     const filtroCliente = document.getElementById('finFiltroCliente')?.value;
     if (filtroCliente) query = query.eq('cliente_id', filtroCliente);
     else if (!isAgency && currentClienteId) query = query.eq('cliente_id', currentClienteId);
 
-    // Filtro de mês
     const filtroMes = document.getElementById('finFiltroMes')?.value;
     if (filtroMes) {
       const [ano, mes] = filtroMes.split('-');
       const inicio = `${ano}-${mes}-01`;
       const fim = new Date(parseInt(ano), parseInt(mes), 0);
       const fimStr = `${ano}-${mes}-${String(fim.getDate()).padStart(2,'0')}`;
-      query = query.gte('data_vencimento', inicio).lte('data_vencimento', fimStr);
+      query = query.gte('data_emissao_nf', inicio).lte('data_emissao_nf', fimStr);
     }
 
     const { data, error } = await query;
     if (error) throw error;
 
-    if (!data || data.length === 0) {
-      wrap.innerHTML = '<div class="dash-empty">Nenhuma cobrança encontrada.</div>';
-      if (resumo) resumo.innerHTML = '';
-      return;
-    }
-
-    // Filtro de status (client-side por ser calculado)
     const filtroStatus = document.getElementById('finFiltroStatus')?.value;
     const hoje = new Date(); hoje.setHours(0,0,0,0);
-    const rows = data.map(r => {
-      const venc = new Date(r.data_vencimento + 'T00:00:00');
-      let status = r.pago ? 'pago' : (venc < hoje ? 'vencido' : 'pendente');
+    const rows = (data||[]).map(r => {
+      const pag = r.data_pagamento ? new Date(r.data_pagamento + 'T00:00:00') : null;
+      let status = r.pago ? 'pago' : (pag && pag < hoje ? 'vencido' : 'pendente');
       return { ...r, _status: status };
     }).filter(r => !filtroStatus || r._status === filtroStatus);
 
@@ -3566,36 +3644,56 @@ async function carregarFinanceiro() {
     const pagosVal = rows.filter(r => r._status === 'pago').reduce((s, r) => s + parseFloat(r.valor||0), 0);
     const pendVal  = rows.filter(r => r._status !== 'pago').reduce((s, r) => s + parseFloat(r.valor||0), 0);
     if (resumo) resumo.innerHTML = `
-      <div class="fin-summary-item">Total: <strong>R$ ${totalVal.toFixed(2).replace('.',',')}</strong></div>
-      <div class="fin-summary-item">Pago: <strong style="color:var(--ne-green)">R$ ${pagosVal.toFixed(2).replace('.',',')}</strong></div>
-      <div class="fin-summary-item">Em aberto: <strong style="color:var(--ne-red)">R$ ${pendVal.toFixed(2).replace('.',',')}</strong></div>`;
+      <div class="fin-summary-item">Total: <strong>R$ ${totalVal.toLocaleString('pt-BR',{minimumFractionDigits:2})}</strong></div>
+      <div class="fin-summary-item">Pago: <strong style="color:var(--ne-green)">R$ ${pagosVal.toLocaleString('pt-BR',{minimumFractionDigits:2})}</strong></div>
+      <div class="fin-summary-item">Em aberto: <strong style="color:var(--ne-red)">R$ ${pendVal.toLocaleString('pt-BR',{minimumFractionDigits:2})}</strong></div>`;
 
-    const agencyCanEdit = isAgency;
+    if (rows.length === 0) {
+      wrap.innerHTML = '<div class="dash-empty">Nenhuma entrada encontrada.</div>';
+      return;
+    }
+
+    const fmt = d => d ? new Date(d+'T00:00:00').toLocaleDateString('pt-BR') : '—';
+    const canEdit = isAgency;
+
     const tableRows = rows.map(r => {
-      const valFmt = `R$ ${parseFloat(r.valor||0).toFixed(2).replace('.',',')}`;
-      const dataFmt = r.data_vencimento ? new Date(r.data_vencimento + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
-      const clienteNome = r.clientes?.nome || (isAgency ? '—' : '');
-      const badgeClass = r._status;
-      const badgeLabel = { pago:'Pago', pendente:'Pendente', vencido:'Vencido' }[r._status];
-      const acoesHtml = agencyCanEdit ? `
-        <button class="btn btn-ghost btn-sm" onclick="togglePago('${r.id}', ${r.pago})">${r.pago ? '↩ Desmarcar' : '✓ Marcar pago'}</button>
-        <button class="btn btn-ghost btn-sm" onclick="excluirCobranca('${r.id}')" style="color:var(--ne-red)">🗑</button>` : '';
-      return `<tr>
-        ${isAgency ? `<td>${clienteNome}</td>` : ''}
-        <td>${r.descricao||'—'}</td>
-        <td>${valFmt}</td>
-        <td>${dataFmt}</td>
-        <td><span class="fin-badge ${badgeClass}">${badgeLabel}</span></td>
-        <td>${r.observacao||''}</td>
-        ${agencyCanEdit ? `<td>${acoesHtml}</td>` : ''}
+      const nfLink = r.nf_url
+        ? `<a href="${r.nf_url}" target="_blank" title="Ver NF" class="fin-nf-btn">📎</a>`
+        : '';
+      const nfUpload = canEdit
+        ? `<label title="Anexar NF" class="fin-nf-btn" style="cursor:pointer">📁<input type="file" accept=".pdf,.xml,.png,.jpg" style="display:none" onchange="uploadNF('${r.id}', this)"></label>`
+        : '';
+      const badge = `<span class="fin-badge ${r._status}">${{pago:'Pago',pendente:'Pendente',vencido:'Vencido'}[r._status]}</span>`;
+
+      const acoes = canEdit ? `
+        <button class="fin-action-btn" onclick="enviarNFEmail('${r.id}')" title="Enviar por email">✉️</button>
+        <button class="fin-action-btn" onclick="togglePago('${r.id}', ${r.pago})" title="${r.pago ? 'Desmarcar pago' : 'Marcar como pago'}">${r.pago ? '↩' : '✓'}</button>
+        <button class="fin-action-btn" onclick="excluirCobranca('${r.id}')" style="color:var(--ne-red)" title="Excluir">🗑</button>` : '';
+
+      return `<tr data-id="${r.id}">
+        ${isAgency ? `<td>${r.clientes?.nome||'—'}</td>` : ''}
+        <td>${r.referencia||r.descricao||'—'}</td>
+        <td>${fmt(r.data_emissao_nf)}</td>
+        <td>${fmt(r.data_pagamento)}</td>
+        <td style="text-align:right;font-weight:600">R$ ${parseFloat(r.valor||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+        <td style="text-align:center">${nfLink}${nfUpload}</td>
+        <td style="max-width:200px;color:var(--ink-lighter);font-size:12px">${r.observacoes||''}</td>
+        <td>${badge}</td>
+        ${canEdit ? `<td style="white-space:nowrap">${acoes}</td>` : ''}
       </tr>`;
     }).join('');
 
     wrap.innerHTML = `<table class="fin-table">
       <thead><tr>
         ${isAgency ? '<th>Cliente</th>' : ''}
-        <th>Descrição</th><th>Valor</th><th>Vencimento</th><th>Status</th><th>Obs</th>
-        ${agencyCanEdit ? '<th>Ações</th>' : ''}
+        <th>Referência</th>
+        <th>Emissão NF</th>
+        <th>Pagamento</th>
+        <th style="text-align:right">Valor</th>
+        <th style="text-align:center">NF</th>
+        <th>Observações</th>
+        <th>Status</th>
+        ${canEdit ? '<th>Ações</th>' : ''}
       </tr></thead>
       <tbody>${tableRows}</tbody>
     </table>`;
@@ -3606,37 +3704,100 @@ async function carregarFinanceiro() {
   }
 }
 
+// ── ADICIONAR ──
 async function adicionarCobranca() {
-  const clienteId = document.getElementById('finNovoCliente')?.value;
-  const descricao = document.getElementById('finNovaDesc')?.value?.trim();
-  const valor     = parseFloat(document.getElementById('finNovoValor')?.value);
-  const dataVenc  = document.getElementById('finNovaData')?.value;
+  const clienteId  = document.getElementById('finNovoCliente')?.value;
+  const referencia = document.getElementById('finNovaRef')?.value?.trim();
+  const emissao    = document.getElementById('finNovaEmissao')?.value;
+  const pagamento  = document.getElementById('finNovaPagamento')?.value;
+  const valor      = parseFloat(document.getElementById('finNovoValor')?.value);
+  const obs        = document.getElementById('finNovaObs')?.value?.trim();
 
-  if (!clienteId) { showToast('Selecione um cliente'); return; }
-  if (!descricao) { showToast('Informe a descrição'); return; }
+  if (!clienteId)  { showToast('Selecione um cliente'); return; }
+  if (!referencia) { showToast('Informe a referência'); return; }
   if (!valor || valor <= 0) { showToast('Informe o valor'); return; }
-  if (!dataVenc) { showToast('Informe a data de vencimento'); return; }
 
   try {
     const { error } = await sb.from('financeiro').insert({
       cliente_id: clienteId,
-      descricao,
+      referencia,
+      descricao: referencia,
+      data_emissao_nf: emissao || null,
+      data_pagamento: pagamento || null,
       valor,
-      data_vencimento: dataVenc,
-      pago: false,
+      observacoes: obs || null,
+      pago: !!pagamento,
       criado_por: (await sb.auth.getUser()).data.user?.id
     });
     if (error) throw error;
-    document.getElementById('finNovoCliente').value = '';
-    document.getElementById('finNovaDesc').value = '';
-    document.getElementById('finNovoValor').value = '';
-    document.getElementById('finNovaData').value = '';
-    showToast('✅ Cobrança adicionada!');
+    ['finNovoCliente','finNovaRef','finNovaEmissao','finNovaPagamento','finNovoValor','finNovaObs']
+      .forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+    showToast('✅ Entrada adicionada!');
     carregarFinanceiro();
   } catch(e) {
     showToast('Erro: ' + e.message);
-    console.error(e);
   }
+}
+
+// ── UPLOAD NF ──
+async function uploadNF(registroId, input) {
+  const file = input.files?.[0];
+  if (!file) return;
+  showToast('Enviando NF...');
+  try {
+    const ext = file.name.split('.').pop();
+    const path = `nf/${registroId}.${ext}`;
+    const { error: upErr } = await sb.storage.from('posts-media').upload(path, file, { upsert: true });
+    if (upErr) throw upErr;
+    const { data: urlData } = sb.storage.from('posts-media').getPublicUrl(path);
+    const nf_url = urlData.publicUrl;
+    const { error: dbErr } = await sb.from('financeiro').update({ nf_url }).eq('id', registroId);
+    if (dbErr) throw dbErr;
+    showToast('✅ NF anexada!');
+    carregarFinanceiro();
+  } catch(e) {
+    showToast('Erro ao enviar NF: ' + e.message);
+  }
+}
+
+// ── ENVIAR EMAIL ──
+async function enviarNFEmail(registroId) {
+  // Buscar dados do registro
+  const { data: r } = await sb.from('financeiro').select('*, clientes(nome)').eq('id', registroId).single();
+  if (!r) { showToast('Erro ao carregar dados'); return; }
+
+  // Buscar emails ativos
+  const { data: emails } = await sb.from('emails_financeiro').select('email, nome').eq('ativo', true);
+  if (!emails || emails.length === 0) {
+    showToast('⚠️ Nenhum destinatário ativo. Cadastre emails na lista acima.');
+    return;
+  }
+
+  const to = emails.map(e => e.email).join(',');
+  const clienteNome = r.clientes?.nome || '';
+  const ref = r.referencia || r.descricao || '';
+  const valor = `R$ ${parseFloat(r.valor||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+  const emissao = r.data_emissao_nf ? new Date(r.data_emissao_nf+'T00:00:00').toLocaleDateString('pt-BR') : '';
+  const corpoExtra = document.getElementById('finEmailCorpo')?.value?.trim() || '';
+  const nfLink = r.nf_url ? `
+Anexo NF: ${r.nf_url}` : '';
+
+  const subject = `NF — ${ref}${clienteNome ? ' · ' + clienteNome : ''}`;
+  const body = `Prezado(s),
+
+Segue NF referente a:
+
+Referência: ${ref}
+Cliente: ${clienteNome}
+Valor: ${valor}
+Data de emissão: ${emissao}${nfLink}
+
+${corpoExtra}
+
+Atenciosamente,
+New Entry`;
+
+  window.location.href = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
 async function togglePago(id, pagoAtual) {
@@ -3655,11 +3816,11 @@ async function togglePago(id, pagoAtual) {
 }
 
 async function excluirCobranca(id) {
-  if (!confirm('Excluir esta cobrança?')) return;
+  if (!confirm('Excluir esta entrada?')) return;
   try {
     const { error } = await sb.from('financeiro').delete().eq('id', id);
     if (error) throw error;
-    showToast('Cobrança removida.');
+    showToast('Entrada removida.');
     carregarFinanceiro();
   } catch(e) {
     showToast('Erro: ' + e.message);
