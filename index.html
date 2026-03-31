@@ -60,8 +60,8 @@
   header {
     background: #1E1E1E;
     border-bottom: 0.5px solid rgba(255,255,255,0.08);
-    padding: 0 36px;
-    height: 64px;
+    padding: 0 40px;
+    height: 72px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -114,7 +114,32 @@
     font-weight: 700;
     text-transform: uppercase;
   }
-  .header-right { display: flex; align-items: center; gap: 14px; }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .cliente-selector-wrap {
+    display: flex; align-items: center; gap: 0;
+    background: rgba(255,255,255,0.07);
+    border: 0.5px solid rgba(255,255,255,0.15);
+    border-radius: 3px;
+    padding: 0 4px 0 12px;
+    height: 38px;
+  }
+  .cliente-selector-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+    margin-right: 8px; white-space: nowrap;
+  }
+  .cliente-selector-select {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+    color: rgba(255,255,255,0.85);
+    background: transparent; border: none; outline: none; cursor: pointer;
+    padding: 0 28px 0 0; min-width: 140px; max-width: 220px;
+    appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,0.4)' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 8px center;
+  }
+  .cliente-selector-select option { background: #2a2a2a; color: #fff; }
   .role-badge {
     font-family: 'Barlow Condensed', sans-serif;
     font-size: 11px; font-weight: 700;
@@ -1417,16 +1442,19 @@
     </div>
     <div class="logo-text-wrap">
       <div class="logo-brand">Cronograma</div>
-      <div class="logo-sub">Font Life</div>
+      <div class="logo-sub" id="logoClienteNome">New Entry</div>
     </div>
   </div>
   <div class="header-right">
     <span class="role-badge" id="roleBadge">Agência</span>
-    <button class="switch-btn" onclick="openClientesModal()" id="clientesBtn" style="background:rgba(255,255,255,0.06);margin-right:4px">👥 Clientes</button>
-    <select id="clienteSeletor" onchange="selecionarCliente(this.value)" style="display:none;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.65);background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:2px;padding:6px 12px;cursor:pointer;margin-right:4px;max-width:180px">
-      <option value="">— Selecionar cliente —</option>
-    </select>
-    <button class="switch-btn" onclick="toggleRole()" id="switchBtn">Ver como Cliente</button>
+    <!-- Client selector (agency only) -->
+    <div class="cliente-selector-wrap" id="clienteSeletorWrap" style="display:none">
+      <span class="cliente-selector-label">Cliente</span>
+      <select class="cliente-selector-select" id="clienteSeletor" onchange="selecionarCliente(this.value)">
+        <option value="">— Selecionar —</option>
+      </select>
+    </div>
+    <button class="switch-btn" onclick="openClientesModal()" id="clientesBtn" style="background:rgba(255,255,255,0.06)">👥 Clientes</button>
   </div>
 </header>
 
@@ -3569,9 +3597,13 @@ async function popularFinFiltros() {
 async function carregarEmailsFin() {
   const list = document.getElementById('finEmailList');
   if (!list) return;
-  const { data } = await sb.from('emails_financeiro').select('*').order('criado_em');
+  // Filtrar emails pelo cliente selecionado
+  let query = sb.from('emails_financeiro').select('*').order('criado_em');
+  if (currentClienteId) query = query.eq('cliente_id', currentClienteId);
+  else if (isAgency) query = query.is('cliente_id', null); // emails globais da agência
+  const { data } = await query;
   if (!data || data.length === 0) {
-    list.innerHTML = '<span style="font-size:12px;color:var(--ink-lighter)">Nenhum destinatário cadastrado ainda.</span>';
+    list.innerHTML = '<span style="font-size:12px;color:var(--ink-lighter)">Nenhum destinatário cadastrado para este cliente ainda.</span>';
     return;
   }
   list.innerHTML = data.map(e => `
@@ -3586,7 +3618,10 @@ async function adicionarEmailFin() {
   const email = document.getElementById('finNovoEmailAddr')?.value?.trim();
   const nome  = document.getElementById('finNovoEmailNome')?.value?.trim();
   if (!email || !email.includes('@')) { showToast('Informe um email válido'); return; }
-  const { error } = await sb.from('emails_financeiro').insert({ email, nome: nome||null, ativo: true });
+  const { error } = await sb.from('emails_financeiro').insert({
+    email, nome: nome||null, ativo: true,
+    cliente_id: currentClienteId || null
+  });
   if (error) { showToast('Erro: ' + error.message); return; }
   document.getElementById('finNovoEmailAddr').value = '';
   document.getElementById('finNovoEmailNome').value = '';
@@ -3766,8 +3801,11 @@ async function enviarNFEmail(registroId) {
   const { data: r } = await sb.from('financeiro').select('*, clientes(nome)').eq('id', registroId).single();
   if (!r) { showToast('Erro ao carregar dados'); return; }
 
-  // Buscar emails ativos
-  const { data: emails } = await sb.from('emails_financeiro').select('email, nome').eq('ativo', true);
+  // Buscar emails ativos do cliente
+  let emailQuery = sb.from('emails_financeiro').select('email, nome').eq('ativo', true);
+  if (r.cliente_id) emailQuery = emailQuery.eq('cliente_id', r.cliente_id);
+  else emailQuery = emailQuery.is('cliente_id', null);
+  const { data: emails } = await emailQuery;
   if (!emails || emails.length === 0) {
     showToast('⚠️ Nenhum destinatário ativo. Cadastre emails na lista acima.');
     return;
@@ -3844,27 +3882,44 @@ function toggleRole() {
 // ────────────────────────────────────────────
 async function popularSeletorCliente() {
   const sel = document.getElementById('clienteSeletor');
+  const wrap = document.getElementById('clienteSeletorWrap');
   if (!sel) return;
   try {
     const { data: clientes } = await sb.from('clientes').select('id, nome').order('nome');
-    sel.innerHTML = '<option value="">— Selecionar cliente —</option>';
+    sel.innerHTML = '<option value="">— Selecionar —</option>';
     (clientes || []).forEach(c => {
       const opt = document.createElement('option');
       opt.value = c.id;
       opt.textContent = c.nome;
       sel.appendChild(opt);
     });
-    // Restaurar seleção atual se houver
     if (currentClienteId) sel.value = currentClienteId;
+    if (wrap) wrap.style.display = isAgency ? '' : 'none';
   } catch(e) { console.error(e); }
 }
 
 async function selecionarCliente(clienteId) {
   currentClienteId = clienteId || null;
-  await loadCalendarData();
-  renderCalendar();
   const nome = document.getElementById('clienteSeletor')?.selectedOptions[0]?.text;
-  if (clienteId) showToast('Exibindo: ' + nome);
+
+  // Atualizar nome do cliente no logo-sub
+  const logoSub = document.querySelector('.logo-sub');
+  if (logoSub) logoSub.textContent = clienteId ? nome : 'New Entry';
+
+  // Recarregar seção ativa
+  const activeSection = document.querySelector('.section-panel.active')?.id;
+  if (activeSection === 'sectionCronograma' || !activeSection) {
+    await loadCalendarData();
+    renderCalendar();
+  } else if (activeSection === 'sectionDashboard') {
+    loadDashboard();
+  } else if (activeSection === 'sectionFinanceiro') {
+    popularFinFiltros();
+    carregarFinanceiro();
+  }
+
+  if (clienteId) showToast('Contexto: ' + nome);
+  else showToast('Mostrando visão geral');
 }
 
 // ────────────────────────────────────────────
@@ -3902,7 +3957,7 @@ async function initApp() {
         if (badge) { badge.textContent = isAgency ? 'Agência' : 'Cliente'; badge.className = 'role-badge' + (isAgency?'':' client'); }
         if (btn) btn.style.display = isAgency ? '' : 'none';
         const cBtn = document.getElementById('clientesBtn'); if (cBtn) cBtn.style.display = isAgency ? '' : 'none';
-        const sel = document.getElementById('clienteSeletor'); if (sel) sel.style.display = isAgency ? '' : 'none';
+        const seletorWrapInit = document.getElementById('clienteSeletorWrap'); if (seletorWrapInit) seletorWrapInit.style.display = isAgency ? '' : 'none';
         if (isAgency) popularSeletorCliente();
         setupNavTabs(perfil.papel);
         const finAddForm = document.getElementById('finAddForm');
@@ -4092,11 +4147,24 @@ function aplicarPerfil(perfil) {
   if (badge) { badge.textContent = isAgency ? 'Agência' : 'Cliente'; badge.className = 'role-badge' + (isAgency?'':' client'); }
   if (switchBtn) switchBtn.style.display = isAgency ? '' : 'none';
   if (clientesBtn) clientesBtn.style.display = (perfil.papel === 'agencia') ? '' : 'none';
-  const selCliente = document.getElementById('clienteSeletor'); if (selCliente) { selCliente.style.display = isAgency ? '' : 'none'; if (isAgency) popularSeletorCliente(); }
+  const seletorWrap = document.getElementById('clienteSeletorWrap'); if (seletorWrap) { seletorWrap.style.display = isAgency ? '' : 'none'; if (isAgency) popularSeletorCliente(); }
   setupNavTabs(perfil.papel);
   // Mostrar form de adicionar cobrança só para agência
   const finAddForm = document.getElementById('finAddForm');
   if (finAddForm) finAddForm.style.display = (perfil.papel === 'agencia') ? '' : 'none';
+  // Atualizar nome no logo
+  const logoNome = document.getElementById('logoClienteNome');
+  if (logoNome) {
+    if (isAgency) logoNome.textContent = 'New Entry';
+    else {
+      // Para cliente, buscar nome da empresa
+      if (currentClienteId) {
+        sb.from('clientes').select('nome').eq('id', currentClienteId).single().then(({data}) => {
+          if (data && logoNome) logoNome.textContent = data.nome;
+        });
+      }
+    }
+  }
 }
 
 async function startApp() {
@@ -4131,10 +4199,7 @@ startApp();
       <div class="cliente-form">
         <h3>Gerar link de convite</h3>
         <div class="cliente-form-row" style="flex-direction:column;gap:8px">
-          <select id="conviteClienteId" style="padding:8px 12px;border:1px solid var(--stone);border-radius:6px;font-size:13px;font-family:inherit;background:var(--off-white);color:var(--ink)">
-            <option value="">— Selecionar empresa (opcional para agência) —</option>
-          </select>
-          <select id="novoClientePapel" style="padding:8px 12px;border:1px solid var(--stone);border-radius:6px;font-size:13px;font-family:inherit;background:var(--off-white);color:var(--ink)">
+          <select id="novoClientePapel" onchange="toggleConviteClienteSelect(this.value)" style="padding:8px 12px;border:1px solid var(--stone);border-radius:6px;font-size:13px;font-family:inherit;background:var(--off-white);color:var(--ink)">
             <optgroup label="Agência">
               <option value="agencia-operador">Agência — Operador (crono + dashboard)</option>
             </optgroup>
@@ -4144,6 +4209,11 @@ startApp();
               <option value="cliente-completo">Cliente — Completo (tudo)</option>
             </optgroup>
           </select>
+          <div id="conviteClienteWrap" style="display:none">
+            <select id="conviteClienteId" style="padding:8px 12px;border:1px solid var(--stone);border-radius:6px;font-size:13px;font-family:inherit;background:var(--off-white);color:var(--ink);width:100%">
+              <option value="">— Selecionar empresa do cliente —</option>
+            </select>
+          </div>
           <input type="text" id="novoClienteNome" placeholder="Nome do usuário (para identificar o convite)" />
           <button class="btn btn-primary btn-sm" onclick="gerarLinkConvite()" id="btnConvidar" style="align-self:flex-start">🔗 Gerar link</button>
         </div>
@@ -4178,7 +4248,7 @@ async function popularConviteClienteSelect() {
   const sel = document.getElementById('conviteClienteId');
   if (!sel) return;
   const { data } = await sb.from('clientes').select('id, nome').order('nome');
-  sel.innerHTML = '<option value="">— Selecionar empresa (opcional para agência) —</option>' +
+  sel.innerHTML = '<option value="">— Selecionar empresa do cliente —</option>' +
     (data||[]).map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
 }
 
@@ -4255,6 +4325,11 @@ function gerarSenha() {
   const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@#!';
   return Array.from({length:10}, ()=>chars[Math.floor(Math.random()*chars.length)]).join('');
 }
+function toggleConviteClienteSelect(papel) {
+  const wrap = document.getElementById('conviteClienteWrap');
+  if (wrap) wrap.style.display = papel.startsWith('cliente') ? '' : 'none';
+}
+
 async function gerarLinkConvite() {
   const nome      = document.getElementById('novoClienteNome').value.trim();
   const papel     = document.getElementById('novoClientePapel').value;
