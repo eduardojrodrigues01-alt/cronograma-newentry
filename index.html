@@ -898,6 +898,44 @@
     line-height: 1.6;
   }
 
+  /* ── TELA DE CADASTRO ── */
+  .signup-screen {
+    position: fixed; inset: 0; z-index: 900;
+    display: flex; align-items: center; justify-content: center;
+    background: #111;
+  }
+  .signup-box {
+    background: #1a1a1a; border-radius: 16px; padding: 40px;
+    width: 420px; max-width: 96vw;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+  }
+  .signup-logo { margin-bottom: 24px; }
+  .signup-logo img { height: 32px; }
+  .signup-title { font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 4px; font-family: 'Barlow Condensed', sans-serif; text-transform: uppercase; }
+  .signup-sub { font-size: 13px; color: #888; margin-bottom: 28px; }
+  .signup-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(240,165,0,0.15); color: #F0A500;
+    border: 1px solid rgba(240,165,0,0.3); border-radius: 20px;
+    padding: 4px 12px; font-size: 12px; font-weight: 600; margin-bottom: 24px;
+  }
+  .signup-label { font-size: 11px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+  .signup-input {
+    width: 100%; padding: 12px 14px; background: #111; border: 1px solid #333;
+    border-radius: 8px; color: #fff; font-size: 14px; font-family: inherit;
+    box-sizing: border-box; margin-bottom: 16px;
+  }
+  .signup-input:focus { outline: none; border-color: #D9261C; }
+  .signup-btn {
+    width: 100%; padding: 14px; background: #D9261C; color: #fff;
+    border: none; border-radius: 8px; font-size: 15px; font-weight: 700;
+    font-family: 'Barlow Condensed', sans-serif; text-transform: uppercase;
+    letter-spacing: 0.05em; cursor: pointer; margin-top: 4px;
+  }
+  .signup-btn:hover { background: #b81f17; }
+  .signup-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .signup-error { color: #ff6b6b; font-size: 12px; margin-top: 8px; }
+
   .preview-overlay {
     position: fixed; inset: 0;
     background: rgba(10,10,10,0.88);
@@ -2871,7 +2909,7 @@ async function doLogin() {
     currentUser = perfil.nome;
     currentUserRole = perfil.papel;
     currentClienteId = perfil.cliente_id;
-    isAgency = perfil.papel === 'agencia';
+    isAgency = perfil.papel === 'agencia' || perfil.papel === 'agencia-operador';
 
     if (errorEl) errorEl.style.display = 'none';
     const screen = document.getElementById('loginScreen');
@@ -3218,7 +3256,7 @@ async function initApp() {
         currentUser = perfil.nome;
         currentUserRole = perfil.papel;
         currentClienteId = perfil.cliente_id;
-        isAgency = perfil.papel === 'agencia';
+        isAgency = perfil.papel === 'agencia' || perfil.papel === 'agencia-operador';
 
         const badge = document.getElementById('roleBadge');
         const btn = document.getElementById('switchBtn');
@@ -3248,7 +3286,156 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-initApp();
+// Verificar token de convite na URL antes de iniciar
+async function checkConviteToken() {
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('convite');
+  if (!token) return false;
+
+  try {
+    // Buscar convite no Supabase
+    const { data: convite, error } = await sb.from('convites')
+      .select('*').eq('token', token).eq('usado', false).single();
+
+    if (error || !convite) {
+      showSignupScreen(null, null, 'Link de convite inválido ou já utilizado.');
+      return true;
+    }
+
+    // Verificar se não expirou
+    if (new Date(convite.expira_em) < new Date()) {
+      showSignupScreen(null, null, 'Este link de convite expirou.');
+      return true;
+    }
+
+    // Mostrar tela de cadastro com dados do convite
+    showSignupScreen(token, convite.papel, null);
+    return true;
+  } catch(err) {
+    console.error('Erro ao verificar convite:', err);
+    return false;
+  }
+}
+
+const PAPEL_LABEL = {
+  'agencia-operador':  'Agência — Operador',
+  'cliente-operador':  'Cliente — Operador',
+  'cliente-financeiro':'Cliente — Financeiro',
+  'cliente-completo':  'Cliente — Completo'
+};
+
+function showSignupScreen(token, papel, erroMsg) {
+  const screen = document.createElement('div');
+  screen.className = 'signup-screen';
+  screen.id = 'signupScreen';
+  const logoUrl = 'https://peazuzkeqedzfseusrxp.supabase.co/storage/v1/object/sign/posts-media/LOGO%20LETRA%20BRANCA.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zN2VmOTk3Yy1mNGVjLTRlYTctOTdmYS0xMzMxZTk5YWM1Y2IiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwb3N0cy1tZWRpYS9MT0dPIExFVFJBIEJSQU5DQS5wbmciLCJpYXQiOjE3NzQxOTg0MjcsImV4cCI6MTg2ODgwNjQyN30.Hzg0ex4o3YzRqCjLZe2LL2yJ6O1nSJpiWhylTaJPunQ';
+
+  screen.innerHTML = erroMsg ? `
+    <div class="signup-box">
+      <div class="signup-logo"><img src="${logoUrl}" alt="New Entry"></div>
+      <div class="signup-title">Link inválido</div>
+      <div class="signup-sub" style="color:#ff6b6b">${erroMsg}</div>
+      <div style="font-size:13px;color:#888;margin-top:16px">Entre em contato com a agência para receber um novo link de acesso.</div>
+    </div>` : `
+    <div class="signup-box">
+      <div class="signup-logo"><img src="${logoUrl}" alt="New Entry"></div>
+      <div class="signup-title">Criar sua conta</div>
+      <div class="signup-sub">Você foi convidado para acessar a plataforma New Entry.</div>
+      ${papel ? `<div class="signup-badge">🎯 ${PAPEL_LABEL[papel] || papel}</div>` : ''}
+      <div class="signup-label">Nome completo</div>
+      <input class="signup-input" type="text" id="signupNome" placeholder="Seu nome" />
+      <div class="signup-label">E-mail</div>
+      <input class="signup-input" type="email" id="signupEmail" placeholder="seu@email.com" />
+      <div class="signup-label">Senha</div>
+      <input class="signup-input" type="password" id="signupSenha" placeholder="Mínimo 8 caracteres" />
+      <div class="signup-label">Confirmar senha</div>
+      <input class="signup-input" type="password" id="signupSenha2" placeholder="Repita a senha" />
+      <div id="signupError" class="signup-error" style="display:none"></div>
+      <button class="signup-btn" id="signupBtn" onclick="doSignup('${token}','${papel}')">Criar conta →</button>
+    </div>`;
+
+  document.body.appendChild(screen);
+}
+
+async function doSignup(token, papel) {
+  const nome   = document.getElementById('signupNome').value.trim();
+  const email  = document.getElementById('signupEmail').value.trim();
+  const senha  = document.getElementById('signupSenha').value;
+  const senha2 = document.getElementById('signupSenha2').value;
+  const errEl  = document.getElementById('signupError');
+  const btn    = document.getElementById('signupBtn');
+
+  errEl.style.display = 'none';
+  if (!nome || !email || !senha) { errEl.textContent = 'Preencha todos os campos.'; errEl.style.display='block'; return; }
+  if (senha.length < 8) { errEl.textContent = 'A senha precisa ter pelo menos 8 caracteres.'; errEl.style.display='block'; return; }
+  if (senha !== senha2) { errEl.textContent = 'As senhas não coincidem.'; errEl.style.display='block'; return; }
+
+  btn.disabled = true; btn.textContent = 'Criando conta...';
+
+  try {
+    // 1. Criar conta no Auth
+    const { data: authData, error: authError } = await sb.auth.signUp({ email, password: senha, options: { data: { nome } } });
+    if (authError) throw authError;
+    if (!authData.user) throw new Error('Erro ao criar usuário.');
+    const userId = authData.user.id;
+
+    // 2. Criar cliente se for papel de cliente
+    let clienteId = null;
+    if (papel.startsWith('cliente')) {
+      const { data: clienteData, error: clienteError } = await sb.from('clientes').insert({ nome }).select().single();
+      if (clienteError) throw clienteError;
+      clienteId = clienteData.id;
+    }
+
+    // 3. Inserir em usuarios
+    const { error: usuarioError } = await sb.from('usuarios').insert({
+      id: userId, nome, email, papel, cliente_id: clienteId
+    });
+    if (usuarioError) throw usuarioError;
+
+    // 4. Marcar convite como usado
+    await sb.from('convites').update({ usado: true, usado_por: userId }).eq('token', token);
+
+    // 5. Remover token da URL
+    window.history.replaceState({}, '', window.location.pathname);
+
+    // 6. Logar automaticamente
+    const { error: loginError } = await sb.auth.signInWithPassword({ email, password: senha });
+    if (loginError) throw loginError;
+
+    // 7. Remover tela de cadastro e entrar
+    document.getElementById('signupScreen')?.remove();
+    const perfil = { nome, papel, cliente_id: clienteId };
+    aplicarPerfil(perfil);
+    await loadCalendarData();
+    renderCalendar();
+
+  } catch(err) {
+    errEl.textContent = 'Erro: ' + err.message;
+    errEl.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Criar conta →';
+  }
+}
+
+function aplicarPerfil(perfil) {
+  currentUser      = perfil.nome;
+  currentUserRole  = perfil.papel;
+  currentClienteId = perfil.cliente_id;
+  isAgency = perfil.papel === 'agencia' || perfil.papel === 'agencia-operador';
+
+  const badge = document.getElementById('roleBadge');
+  const switchBtn = document.getElementById('switchBtn');
+  const clientesBtn = document.getElementById('clientesBtn');
+  if (badge) { badge.textContent = isAgency ? 'Agência' : 'Cliente'; badge.className = 'role-badge' + (isAgency?'':' client'); }
+  if (switchBtn) switchBtn.style.display = isAgency ? '' : 'none';
+  if (clientesBtn) clientesBtn.style.display = (perfil.papel === 'agencia') ? '' : 'none';
+}
+
+async function startApp() {
+  const hasConvite = await checkConviteToken();
+  if (!hasConvite) initApp();
+}
+startApp();
 </script>
 
 <!-- CLIENTES MODAL -->
@@ -3260,13 +3447,22 @@ initApp();
     </div>
     <div class="clientes-body">
       <div class="cliente-form">
-        <h3>Convidar novo cliente</h3>
+        <h3>Gerar link de convite</h3>
         <div class="cliente-form-row">
-          <input type="text" id="novoClienteNome" placeholder="Nome do cliente" />
+          <input type="text" id="novoClienteNome" placeholder="Nome (para identificar o convite)" />
         </div>
-        <div class="cliente-form-row">
-          <input type="email" id="novoClienteEmail" placeholder="E-mail do cliente" />
-          <button class="btn btn-primary btn-sm" onclick="convidarCliente()" id="btnConvidar">Convidar</button>
+        <div class="cliente-form-row" style="flex-direction:column;gap:8px">
+          <select id="novoClientePapel" style="flex:1;padding:8px 12px;border:1px solid var(--stone);border-radius:6px;font-size:13px;font-family:inherit;background:var(--off-white);color:var(--ink)">
+            <optgroup label="Agência">
+              <option value="agencia-operador">Agência — Operador (crono + dashboard)</option>
+            </optgroup>
+            <optgroup label="Cliente">
+              <option value="cliente-operador">Cliente — Operador (crono + dashboard)</option>
+              <option value="cliente-financeiro">Cliente — Financeiro (só financeiro)</option>
+              <option value="cliente-completo">Cliente — Completo (tudo)</option>
+            </optgroup>
+          </select>
+          <button class="btn btn-primary btn-sm" onclick="gerarLinkConvite()" id="btnConvidar" style="align-self:flex-start">🔗 Gerar link</button>
         </div>
         <div id="clienteResultado"></div>
       </div>
@@ -3320,40 +3516,53 @@ function gerarSenha() {
   const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@#!';
   return Array.from({length:10}, ()=>chars[Math.floor(Math.random()*chars.length)]).join('');
 }
-async function convidarCliente() {
+async function gerarLinkConvite() {
   const nome  = document.getElementById('novoClienteNome').value.trim();
-  const email = document.getElementById('novoClienteEmail').value.trim();
+  const papel = document.getElementById('novoClientePapel').value;
   const res   = document.getElementById('clienteResultado');
   const btn   = document.getElementById('btnConvidar');
-  if (!nome||!email) { res.innerHTML='<div style="color:var(--ne-red);font-size:12px;margin-top:8px">Preencha nome e e-mail.</div>'; return; }
-  btn.disabled=true; btn.textContent='Criando...'; res.innerHTML='';
+  if (!nome) { res.innerHTML='<div style="color:var(--ne-red);font-size:12px;margin-top:8px">Preencha o nome para identificar o convite.</div>'; return; }
+  btn.disabled=true; btn.textContent='Gerando...'; res.innerHTML='';
   try {
-    const senha = gerarSenha();
-    // 1. Criar conta Auth
-    const { data: authData, error: authError } = await sb.auth.signUp({ email, password: senha, options: { data: { nome } } });
-    if (authError) throw authError;
-    if (!authData.user) throw new Error('Usuário não criado.');
-    const userId = authData.user.id;
-    // 2. Criar cliente
-    const { data: clienteData, error: clienteError } = await sb.from('clientes').insert({ nome }).select().single();
-    if (clienteError) throw clienteError;
-    // 3. Inserir usuário
-    const { error: usuarioError } = await sb.from('usuarios').insert({ id: userId, nome, email, papel: 'cliente', cliente_id: clienteData.id });
-    if (usuarioError) throw usuarioError;
+    // Gerar token único
+    const token = crypto.randomUUID();
+    const expira = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(); // 7 dias
+
+    // Salvar convite no Supabase
+    const { error } = await sb.from('convites').insert({
+      token,
+      papel,
+      nome_ref: nome,
+      expira_em: expira,
+      usado: false
+    });
+    if (error) throw error;
+
+    // Montar link
+    const baseUrl = window.location.origin + window.location.pathname;
+    const link = `${baseUrl}?convite=${token}`;
+
+    const papelLabel = {
+      'agencia-operador': 'Agência — Operador',
+      'cliente-operador': 'Cliente — Operador',
+      'cliente-financeiro': 'Cliente — Financeiro',
+      'cliente-completo': 'Cliente — Completo'
+    }[papel] || papel;
+
     res.innerHTML = `<div class="cliente-senha-box">
-      ✅ Cliente <strong>${nome}</strong> criado com sucesso!<br>
-      📧 E-mail de confirmação enviado para <strong>${email}</strong>.<br>
-      O cliente precisa confirmar o e-mail antes de fazer login.<br><br>
-      🔑 <strong>Senha temporária:</strong> <code style="background:#e8f5e9;padding:2px 8px;border-radius:4px;font-size:13px;font-family:monospace">${senha}</code><br>
-      <span style="color:var(--ink-lighter);font-size:11px">Copie e envie esta senha para o cliente agora. Ela não aparecerá novamente.</span>
+      ✅ Link gerado para <strong>${nome}</strong> (${papelLabel})!<br><br>
+      🔗 <strong>Link de convite:</strong><br>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
+        <code id="linkConvite" style="background:#e8f5e9;padding:4px 8px;border-radius:4px;font-size:11px;font-family:monospace;flex:1;word-break:break-all">${link}</code>
+        <button onclick="navigator.clipboard.writeText('${link}');showToast('Link copiado!')" style="white-space:nowrap;padding:4px 10px;background:var(--accent);color:#fff;border:none;border-radius:4px;font-size:11px;cursor:pointer">Copiar</button>
+      </div>
+      <span style="color:var(--ink-lighter);font-size:11px;margin-top:4px;display:block">Válido por 7 dias. O link só pode ser usado uma vez.</span>
     </div>`;
     document.getElementById('novoClienteNome').value='';
-    document.getElementById('novoClienteEmail').value='';
-    carregarClientes();
   } catch(err) {
     res.innerHTML=`<div style="color:var(--ne-red);font-size:12px;margin-top:8px">Erro: ${err.message}</div>`;
     console.error(err);
-  } finally { btn.disabled=false; btn.textContent='Convidar'; }
+  } finally { btn.disabled=false; btn.textContent='🔗 Gerar link'; }
 }
 async function removerCliente(userId, nome) {
   if (!confirm(`Remover acesso de "${nome}"?\nO cliente não conseguirá mais fazer login.`)) return;
