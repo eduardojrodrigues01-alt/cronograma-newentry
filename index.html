@@ -3590,7 +3590,16 @@ async function popularFinFiltros() {
 
   const { data: clientes } = await sb.from('clientes').select('id, nome').order('nome');
   const opts = (clientes||[]).map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
-  if (selFiltro) selFiltro.innerHTML = '<option value="">Todos os clientes</option>' + opts;
+  if (selFiltro) {
+    selFiltro.innerHTML = '<option value="">Todos os clientes</option>' + opts;
+    // Se há cliente no contexto, pré-selecionar e esconder o filtro
+    if (currentClienteId) {
+      selFiltro.value = currentClienteId;
+      selFiltro.style.display = 'none';
+    } else {
+      selFiltro.style.display = isAgency ? '' : 'none';
+    }
+  }
   if (selForm) {
     selForm.innerHTML = '<option value="">Selecionar cliente</option>' + opts;
     // Se já tem cliente no contexto, pré-selecionar e esconder o select
@@ -3684,9 +3693,9 @@ async function carregarFinanceiro() {
   try {
     let query = sb.from('financeiro').select('*, clientes(nome)').order('data_emissao_nf', { ascending: false });
 
-    const filtroCliente = document.getElementById('finFiltroCliente')?.value;
+    // Contexto do cliente tem prioridade sobre o filtro manual
+    const filtroCliente = currentClienteId || document.getElementById('finFiltroCliente')?.value;
     if (filtroCliente) query = query.eq('cliente_id', filtroCliente);
-    else if (!isAgency && currentClienteId) query = query.eq('cliente_id', currentClienteId);
 
     const filtroMes = document.getElementById('finFiltroMes')?.value;
     if (filtroMes) {
