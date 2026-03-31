@@ -3373,9 +3373,18 @@ async function doSignup(token, papel) {
   btn.disabled = true; btn.textContent = 'Criando conta...';
 
   try {
+    // 0. Verificar se email já está cadastrado na plataforma
+    const { data: existente } = await sb.from('usuarios').select('id').eq('email', email).maybeSingle();
+    if (existente) throw new Error('Este e-mail já possui uma conta. Acesse a página principal e faça login.');
+
     // 1. Criar conta no Auth
     const { data: authData, error: authError } = await sb.auth.signUp({ email, password: senha, options: { data: { nome } } });
-    if (authError) throw authError;
+    if (authError) {
+      if (authError.message?.toLowerCase().includes('already registered') || authError.message?.toLowerCase().includes('already been registered')) {
+        throw new Error('Este e-mail já possui uma conta. Acesse a página principal e faça login.');
+      }
+      throw authError;
+    }
     if (!authData.user) throw new Error('Erro ao criar usuário.');
     const userId = authData.user.id;
 
@@ -3491,7 +3500,7 @@ async function carregarClientes() {
   const list = document.getElementById('clienteList');
   try {
     const { data, error } = await sb.from('usuarios')
-      .select('*').eq('papel', 'cliente').order('nome');
+      .select('*').in('papel', ['cliente-operador','cliente-financeiro','cliente-completo']).order('nome');
     if (error) throw error;
     if (!data || data.length === 0) {
       list.innerHTML = '<div style="color:var(--ink-lighter);font-size:13px;text-align:center;padding:16px">Nenhum cliente cadastrado ainda.</div>';
