@@ -1626,27 +1626,11 @@
     </div>
 
     <!-- USUÁRIOS -->
+    <!-- USUÁRIOS -->
     <div class="config-panel active" id="cfgUsuarios">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-lighter)">Usuários cadastrados</div>
-      </div>
-      <div id="cfgUsuariosList"></div>
-    </div>
-
-    <!-- CLIENTES -->
-    <div class="config-panel" id="cfgClientes">
-      <!-- Criar cliente -->
-      <div class="cliente-form" style="margin-bottom:16px">
-        <h3 style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-lighter);margin-bottom:12px">Criar novo cliente</h3>
-        <div style="display:flex;gap:8px">
-          <input type="text" id="cfgNovoClienteNome" placeholder="Nome da empresa" style="flex:1;padding:8px 12px;border:1px solid var(--stone);border-radius:6px;font-size:13px;font-family:inherit;background:var(--off-white);color:var(--ink)">
-          <button class="btn btn-primary btn-sm" onclick="cfgCriarCliente()">＋ Criar</button>
-        </div>
-        <div id="cfgClienteCriadoMsg" style="margin-top:8px;font-size:12px"></div>
-      </div>
       <!-- Gerar convite -->
-      <div class="cliente-form" style="margin-bottom:16px">
-        <h3 style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-lighter);margin-bottom:12px">Gerar link de convite</h3>
+      <div class="cliente-form" style="margin-bottom:20px">
+        <h3 style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-lighter);margin-bottom:12px">Adicionar usuário via convite</h3>
         <div style="display:flex;flex-direction:column;gap:8px;max-width:480px">
           <select id="cfgConvitePapel" onchange="cfgToggleClienteConvite(this.value)" style="padding:8px 12px;border:1px solid var(--stone);border-radius:6px;font-size:13px;font-family:inherit;background:var(--off-white);color:var(--ink)">
             <optgroup label="Agência">
@@ -1664,9 +1648,25 @@
             </select>
           </div>
           <input type="text" id="cfgConviteNome" placeholder="Nome do usuário" style="padding:8px 12px;border:1px solid var(--stone);border-radius:6px;font-size:13px;font-family:inherit;background:var(--off-white);color:var(--ink)">
-          <button class="btn btn-primary btn-sm" onclick="cfgGerarConvite()" style="align-self:flex-start">🔗 Gerar link</button>
+          <button class="btn btn-primary btn-sm" onclick="cfgGerarConvite()" style="align-self:flex-start">🔗 Gerar link de convite</button>
         </div>
         <div id="cfgConviteResultado" style="margin-top:12px"></div>
+      </div>
+      <!-- Lista usuários -->
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-lighter);margin-bottom:12px">Usuários cadastrados</div>
+      <div id="cfgUsuariosList"></div>
+    </div>
+
+    <!-- CLIENTES -->
+    <div class="config-panel" id="cfgClientes">
+      <!-- Criar cliente -->
+      <div class="cliente-form" style="margin-bottom:16px">
+        <h3 style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-lighter);margin-bottom:12px">Criar novo cliente</h3>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="cfgNovoClienteNome" placeholder="Nome da empresa" style="flex:1;padding:8px 12px;border:1px solid var(--stone);border-radius:6px;font-size:13px;font-family:inherit;background:var(--off-white);color:var(--ink)">
+          <button class="btn btn-primary btn-sm" onclick="cfgCriarCliente()">＋ Criar</button>
+        </div>
+        <div id="cfgClienteCriadoMsg" style="margin-top:8px;font-size:12px"></div>
       </div>
       <!-- Lista clientes -->
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-lighter);margin-bottom:12px">Clientes cadastrados</div>
@@ -4380,6 +4380,7 @@ async function carregarUsuariosConfig() {
         <td>${(u.cliente_id ? clienteMap[u.cliente_id] : null) || (u.papel.startsWith('agencia') ? '<span style="opacity:.4">—</span>' : '<span style="color:var(--ne-red);font-size:11px">Sem cliente</span>')}</td>
         <td style="white-space:nowrap">
           <button class="fin-action-btn" onclick="editarUsuario('${u.id}')" title="Editar">✏️</button>
+          <button class="fin-action-btn" onclick="enviarRecuperacaoSenha('${u.email}')" title="Enviar email de recuperação de senha">🔑</button>
           ${u.papel !== 'agencia' ? `<button class="fin-action-btn" onclick="reenviarConviteUsuario('${u.id}','${u.papel}','${(u.nome||'').replace(/'/g,"\'")}','${u.cliente_id||''}')" title="Reenviar convite">🔗</button>` : ''}
           ${u.papel !== 'agencia' ? `<button class="fin-action-btn" onclick="excluirUsuarioConfig('${u.id}','${(u.nome||'').replace(/'/g,"\'")}')">🗑</button>` : ''}
         </td>
@@ -4429,6 +4430,15 @@ async function salvarEdicaoUsuario(userId) {
   if (error) { showToast('Erro: ' + error.message); return; }
   showToast('✅ Usuário atualizado!');
   carregarUsuariosConfig();
+}
+
+async function enviarRecuperacaoSenha(email) {
+  if (!email) { showToast('Email não encontrado'); return; }
+  const { error } = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + window.location.pathname
+  });
+  if (error) { showToast('Erro: ' + error.message); return; }
+  showToast('✅ Email de recuperação enviado para ' + email);
 }
 
 async function excluirUsuarioConfig(userId, nome) {
