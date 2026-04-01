@@ -162,6 +162,26 @@
   }
   .switch-btn:hover { background: #D9261C; color: white; border-color: #D9261C; }
 
+  /* ── CONFIGURAÇÕES ── */
+  .config-wrap { max-width: 1100px; margin: 0 auto; padding: 32px 36px; }
+  .config-tabs { display:flex; gap:0; border-bottom:1px solid var(--stone); margin-bottom:24px; }
+  .config-tab { font-family:'Barlow Condensed',sans-serif; font-size:12px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-lighter); background:none; border:none; border-bottom:2px solid transparent; padding:10px 20px; cursor:pointer; transition:.18s; }
+  .config-tab:hover { color:var(--ink); }
+  .config-tab.active { color:var(--ne-red); border-bottom-color:var(--ne-red); }
+  .config-panel { display:none; }
+  .config-panel.active { display:block; }
+  .usuarios-table { width:100%; border-collapse:collapse; background:var(--surface); border:1px solid var(--stone); border-radius:var(--radius); overflow:hidden; margin-bottom:20px; }
+  .usuarios-table th { font-family:'Barlow Condensed',sans-serif; font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-lighter); background:var(--off-white); border-bottom:1px solid var(--stone); padding:10px 14px; text-align:left; }
+  .usuarios-table td { font-size:13px; color:var(--ink); border-bottom:1px solid var(--stone); padding:10px 14px; vertical-align:middle; }
+  .usuarios-table tr:last-child td { border-bottom:none; }
+  .usuarios-table tr:hover td { background:var(--off-white); }
+  .papel-badge { display:inline-block; font-family:'Barlow Condensed',sans-serif; font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; padding:3px 8px; border-radius:2px; background:var(--off-white); border:1px solid var(--stone); color:var(--ink-lighter); }
+  .papel-badge.agencia { background:rgba(217,38,28,0.08); border-color:rgba(217,38,28,0.2); color:var(--ne-red); }
+  .papel-badge.operador { background:var(--accent-light); border-color:rgba(58,110,165,0.2); color:var(--accent); }
+  .papel-badge.cliente { background:var(--green-light); border-color:rgba(92,155,58,0.2); color:var(--ne-green); }
+  .edit-inline { display:flex; gap:6px; align-items:center; }
+  .edit-inline select, .edit-inline input { font-family:'Barlow',sans-serif; font-size:12px; color:var(--ink); background:var(--surface); border:1px solid var(--stone-dark); border-radius:var(--radius); padding:4px 8px; }
+
   /* ── NAV TABS ── */
   .nav-tabs {
     background: var(--off-white);
@@ -1465,6 +1485,7 @@
   <button class="nav-tab active" id="tabDashboard" onclick="showSection('dashboard')">📊 Dashboard</button>
   <button class="nav-tab" id="tabCronograma" onclick="showSection('cronograma')">📅 Cronograma</button>
   <button class="nav-tab" id="tabFinanceiro" onclick="showSection('financeiro')">💰 Financeiro</button>
+  <button class="nav-tab" id="tabConfig" onclick="showSection('config')" style="display:none">⚙️ Configurações</button>
 </nav>
 
 <!-- CRONOGRAMA -->
@@ -1593,6 +1614,64 @@
     <!-- RESUMO + TABELA -->
     <div id="finResumo" class="fin-summary"></div>
     <div id="finTableWrap"></div>
+  </div>
+</div>
+
+<!-- CONFIGURAÇÕES -->
+<div class="section-panel" id="sectionConfig">
+  <div class="config-wrap">
+    <div class="config-tabs">
+      <button class="config-tab active" id="cfgTabUsuarios" onclick="showConfigTab('usuarios')">👤 Usuários</button>
+      <button class="config-tab" id="cfgTabClientes" onclick="showConfigTab('clientes')">🏢 Clientes</button>
+    </div>
+
+    <!-- USUÁRIOS -->
+    <div class="config-panel active" id="cfgUsuarios">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-lighter)">Usuários cadastrados</div>
+      </div>
+      <div id="cfgUsuariosList"></div>
+    </div>
+
+    <!-- CLIENTES -->
+    <div class="config-panel" id="cfgClientes">
+      <!-- Criar cliente -->
+      <div class="cliente-form" style="margin-bottom:16px">
+        <h3 style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-lighter);margin-bottom:12px">Criar novo cliente</h3>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="cfgNovoClienteNome" placeholder="Nome da empresa" style="flex:1;padding:8px 12px;border:1px solid var(--stone);border-radius:6px;font-size:13px;font-family:inherit;background:var(--off-white);color:var(--ink)">
+          <button class="btn btn-primary btn-sm" onclick="cfgCriarCliente()">＋ Criar</button>
+        </div>
+        <div id="cfgClienteCriadoMsg" style="margin-top:8px;font-size:12px"></div>
+      </div>
+      <!-- Gerar convite -->
+      <div class="cliente-form" style="margin-bottom:16px">
+        <h3 style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-lighter);margin-bottom:12px">Gerar link de convite</h3>
+        <div style="display:flex;flex-direction:column;gap:8px;max-width:480px">
+          <select id="cfgConvitePapel" onchange="cfgToggleClienteConvite(this.value)" style="padding:8px 12px;border:1px solid var(--stone);border-radius:6px;font-size:13px;font-family:inherit;background:var(--off-white);color:var(--ink)">
+            <optgroup label="Agência">
+              <option value="agencia-operador">Agência — Operador</option>
+            </optgroup>
+            <optgroup label="Cliente">
+              <option value="cliente-operador">Cliente — Operador</option>
+              <option value="cliente-financeiro">Cliente — Financeiro</option>
+              <option value="cliente-completo">Cliente — Completo</option>
+            </optgroup>
+          </select>
+          <div id="cfgConviteClienteWrap" style="display:none">
+            <select id="cfgConviteClienteId" style="width:100%;padding:8px 12px;border:1px solid var(--stone);border-radius:6px;font-size:13px;font-family:inherit;background:var(--off-white);color:var(--ink)">
+              <option value="">— Selecionar empresa —</option>
+            </select>
+          </div>
+          <input type="text" id="cfgConviteNome" placeholder="Nome do usuário" style="padding:8px 12px;border:1px solid var(--stone);border-radius:6px;font-size:13px;font-family:inherit;background:var(--off-white);color:var(--ink)">
+          <button class="btn btn-primary btn-sm" onclick="cfgGerarConvite()" style="align-self:flex-start">🔗 Gerar link</button>
+        </div>
+        <div id="cfgConviteResultado" style="margin-top:12px"></div>
+      </div>
+      <!-- Lista clientes -->
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-lighter);margin-bottom:12px">Clientes cadastrados</div>
+      <div id="cfgClientesList"></div>
+    </div>
   </div>
 </div>
 
@@ -3457,12 +3536,20 @@ async function goToday() {
 // NAVIGATION
 // ────────────────────────────────────────────
 function showSection(name) {
-  ['cronograma','dashboard','financeiro'].forEach(s => {
+  ['cronograma','dashboard','financeiro','config'].forEach(s => {
     document.getElementById('section' + s.charAt(0).toUpperCase() + s.slice(1))?.classList.toggle('active', s === name);
     document.getElementById('tab' + s.charAt(0).toUpperCase() + s.slice(1))?.classList.toggle('active', s === name);
   });
   if (name === 'dashboard') loadDashboard();
   if (name === 'financeiro') { carregarFinanceiro(); popularFinFiltros(); }
+  if (name === 'config') { carregarUsuariosConfig(); carregarClientesConfig(); }
+}
+
+function showConfigTab(tab) {
+  ['usuarios','clientes'].forEach(t => {
+    document.getElementById('cfg' + t.charAt(0).toUpperCase() + t.slice(1))?.classList.toggle('active', t === tab);
+    document.getElementById('cfgTab' + t.charAt(0).toUpperCase() + t.slice(1))?.classList.toggle('active', t === tab);
+  });
 }
 
 function setupNavTabs(papel) {
@@ -3476,14 +3563,17 @@ function setupNavTabs(papel) {
   const canDash  = ['agencia','agencia-operador','cliente-operador','cliente-completo'].includes(papel);
   const canFin   = ['agencia','cliente-financeiro','cliente-completo'].includes(papel);
   const canManageClientes = papel === 'agencia';
+  const canConfig = papel === 'agencia';
 
   if (tabCrono) tabCrono.style.display = canCrono ? '' : 'none';
   if (tabDash)  tabDash.style.display  = canDash  ? '' : 'none';
   if (tabFin)   tabFin.style.display   = canFin   ? '' : 'none';
+  const tabConfig = document.getElementById('tabConfig');
+  if (tabConfig) tabConfig.style.display = canConfig ? '' : 'none';
 
-  // Botão clientes só para agência master
+  // Botão clientes só para agência master (legacy, pode remover futuramente)
   const cBtnSetup = document.getElementById('clientesBtn');
-  if (cBtnSetup) cBtnSetup.style.display = canManageClientes ? '' : 'none';
+  if (cBtnSetup) cBtnSetup.style.display = 'none'; // Agora gerenciado em Configurações
 
   nav.style.display = '';
 
@@ -4243,6 +4333,211 @@ function aplicarPerfil(perfil) {
       }
     }
   }
+}
+
+// ────────────────────────────────────────────
+// CONFIGURAÇÕES — USUÁRIOS
+// ────────────────────────────────────────────
+async function carregarUsuariosConfig() {
+  const wrap = document.getElementById('cfgUsuariosList');
+  if (!wrap) return;
+  wrap.innerHTML = '<div class="dash-empty">Carregando...</div>';
+
+  const { data: usuarios, error } = await sb.from('usuarios').select('*, clientes(nome)').order('nome');
+  if (error) { wrap.innerHTML = '<div class="dash-empty" style="color:var(--ne-red)">Erro ao carregar.</div>'; return; }
+
+  if (!usuarios || usuarios.length === 0) {
+    wrap.innerHTML = '<div class="dash-empty">Nenhum usuário cadastrado.</div>';
+    return;
+  }
+
+  const papelLabel = {
+    'agencia': 'Agência Master',
+    'agencia-operador': 'Agência Operador',
+    'cliente-operador': 'Cliente Operador',
+    'cliente-financeiro': 'Cliente Financeiro',
+    'cliente-completo': 'Cliente Completo'
+  };
+
+  const papelClass = (p) => {
+    if (p === 'agencia') return 'agencia';
+    if (p.startsWith('agencia')) return 'operador';
+    return 'cliente';
+  };
+
+  wrap.innerHTML = `<table class="usuarios-table">
+    <thead><tr>
+      <th>Nome</th><th>Email</th><th>Papel</th><th>Cliente</th><th>Ações</th>
+    </tr></thead>
+    <tbody>
+      ${usuarios.map(u => `<tr id="urow-${u.id}">
+        <td><strong>${u.nome||'—'}</strong></td>
+        <td style="color:var(--ink-lighter)">${u.email||'—'}</td>
+        <td><span class="papel-badge ${papelClass(u.papel)}">${papelLabel[u.papel]||u.papel}</span></td>
+        <td>${u.clientes?.nome || (u.papel.startsWith('agencia') ? '<span style="opacity:.4">—</span>' : '<span style="color:var(--ne-red);font-size:11px">Sem cliente</span>')}</td>
+        <td style="white-space:nowrap">
+          <button class="fin-action-btn" onclick="editarUsuario('${u.id}')" title="Editar">✏️</button>
+          ${u.papel !== 'agencia' ? `<button class="fin-action-btn" onclick="reenviarConviteUsuario('${u.id}','${u.papel}','${(u.nome||'').replace(/'/g,"\'")}','${u.cliente_id||''}')" title="Reenviar convite">🔗</button>` : ''}
+          ${u.papel !== 'agencia' ? `<button class="fin-action-btn" onclick="excluirUsuarioConfig('${u.id}','${(u.nome||'').replace(/'/g,"\'")}')">🗑</button>` : ''}
+        </td>
+      </tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+async function editarUsuario(userId) {
+  const row = document.getElementById('urow-' + userId);
+  if (!row) return;
+  const { data: u } = await sb.from('usuarios').select('*, clientes(nome)').eq('id', userId).single();
+  if (!u) return;
+
+  const { data: clientes } = await sb.from('clientes').select('id, nome').order('nome');
+  const clienteOpts = (clientes||[]).map(c => `<option value="${c.id}" ${c.id === u.cliente_id ? 'selected' : ''}>${c.nome}</option>`).join('');
+
+  row.innerHTML = `
+    <td><input id="edit-nome-${userId}" value="${u.nome||''}" style="width:140px;padding:4px 8px;border:1px solid var(--stone);border-radius:4px;font-size:13px"></td>
+    <td style="color:var(--ink-lighter)">${u.email||'—'}</td>
+    <td>
+      <select id="edit-papel-${userId}" style="padding:4px 8px;border:1px solid var(--stone);border-radius:4px;font-size:12px">
+        <option value="agencia-operador" ${u.papel==='agencia-operador'?'selected':''}>Agência Operador</option>
+        <option value="cliente-operador" ${u.papel==='cliente-operador'?'selected':''}>Cliente Operador</option>
+        <option value="cliente-financeiro" ${u.papel==='cliente-financeiro'?'selected':''}>Cliente Financeiro</option>
+        <option value="cliente-completo" ${u.papel==='cliente-completo'?'selected':''}>Cliente Completo</option>
+      </select>
+    </td>
+    <td>
+      <select id="edit-cliente-${userId}" style="padding:4px 8px;border:1px solid var(--stone);border-radius:4px;font-size:12px">
+        <option value="">— Nenhum —</option>
+        ${clienteOpts}
+      </select>
+    </td>
+    <td style="white-space:nowrap">
+      <button class="fin-action-btn" onclick="salvarEdicaoUsuario('${userId}')" style="color:var(--ne-green);font-weight:700">✓ Salvar</button>
+      <button class="fin-action-btn" onclick="carregarUsuariosConfig()">✕</button>
+    </td>`;
+}
+
+async function salvarEdicaoUsuario(userId) {
+  const nome    = document.getElementById('edit-nome-' + userId)?.value?.trim();
+  const papel   = document.getElementById('edit-papel-' + userId)?.value;
+  const clienteId = document.getElementById('edit-cliente-' + userId)?.value || null;
+
+  const { error } = await sb.from('usuarios').update({ nome, papel, cliente_id: clienteId }).eq('id', userId);
+  if (error) { showToast('Erro: ' + error.message); return; }
+  showToast('✅ Usuário atualizado!');
+  carregarUsuariosConfig();
+}
+
+async function excluirUsuarioConfig(userId, nome) {
+  if (!confirm(`Excluir o usuário "${nome}"?`)) return;
+  await sb.from('usuarios').delete().eq('id', userId);
+  showToast(`Usuário "${nome}" removido.`);
+  carregarUsuariosConfig();
+}
+
+async function reenviarConviteUsuario(userId, papel, nome, clienteId) {
+  const token = crypto.randomUUID();
+  const expira = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+  const { error } = await sb.from('convites').insert({
+    token, papel, nome_ref: nome,
+    cliente_id: clienteId || null,
+    expira_em: expira, usado: false
+  });
+  if (error) { showToast('Erro: ' + error.message); return; }
+  const baseUrl = window.location.origin + window.location.pathname;
+  const link = `${baseUrl}?convite=${token}`;
+  await navigator.clipboard.writeText(link).catch(() => {});
+  showToast('🔗 Link copiado! Válido por 7 dias.');
+}
+
+// ────────────────────────────────────────────
+// CONFIGURAÇÕES — CLIENTES
+// ────────────────────────────────────────────
+async function carregarClientesConfig() {
+  const wrap = document.getElementById('cfgClientesList');
+  if (!wrap) return;
+
+  const { data: clientes } = await sb.from('clientes').select('*').order('nome');
+  const { data: usuarios } = await sb.from('usuarios').select('id,nome,email,papel,cliente_id')
+    .in('papel',['cliente-operador','cliente-financeiro','cliente-completo']);
+
+  if (!clientes || clientes.length === 0) {
+    wrap.innerHTML = '<div class="dash-empty">Nenhum cliente cadastrado.</div>';
+    return;
+  }
+
+  wrap.innerHTML = `<table class="usuarios-table">
+    <thead><tr><th>Empresa</th><th>Usuários</th><th>Ações</th></tr></thead>
+    <tbody>
+      ${clientes.map(c => {
+        const users = (usuarios||[]).filter(u => u.cliente_id === c.id);
+        return `<tr>
+          <td><strong>${c.nome}</strong></td>
+          <td>${users.length > 0 ? users.map(u => `<div style="font-size:11px;color:var(--ink-lighter)">👤 ${u.nome||u.email}</div>`).join('') : '<span style="opacity:.4;font-size:11px">Sem usuários</span>'}</td>
+          <td><button class="fin-action-btn" onclick="excluirClienteConfig('${c.id}','${(c.nome||'').replace(/'/g,"\'")}')">🗑</button></td>
+        </tr>`;
+      }).join('')}
+    </tbody>
+  </table>`;
+
+  // Popular select de convite
+  const sel = document.getElementById('cfgConviteClienteId');
+  if (sel) {
+    sel.innerHTML = '<option value="">— Selecionar empresa —</option>' +
+      (clientes||[]).map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+  }
+}
+
+async function cfgCriarCliente() {
+  const nome = document.getElementById('cfgNovoClienteNome')?.value?.trim();
+  const msg  = document.getElementById('cfgClienteCriadoMsg');
+  if (!nome) { if(msg) msg.innerHTML = '<span style="color:var(--ne-red)">Informe o nome.</span>'; return; }
+  const { error } = await sb.from('clientes').insert({ nome });
+  if (error) { if(msg) msg.innerHTML = `<span style="color:var(--ne-red)">${error.message}</span>`; return; }
+  document.getElementById('cfgNovoClienteNome').value = '';
+  if(msg) msg.innerHTML = `<span style="color:var(--ne-green)">✅ "${nome}" criado!</span>`;
+  carregarClientesConfig();
+  popularSeletorCliente();
+}
+
+async function excluirClienteConfig(clienteId, nome) {
+  if (!confirm(`Remover o cliente "${nome}" e todos os seus usuários?`)) return;
+  await sb.from('usuarios').delete().eq('cliente_id', clienteId);
+  await sb.from('clientes').delete().eq('id', clienteId);
+  showToast(`"${nome}" removido.`);
+  carregarClientesConfig();
+  popularSeletorCliente();
+}
+
+function cfgToggleClienteConvite(papel) {
+  const wrap = document.getElementById('cfgConviteClienteWrap');
+  if (wrap) wrap.style.display = papel.startsWith('cliente') ? '' : 'none';
+}
+
+async function cfgGerarConvite() {
+  const papel     = document.getElementById('cfgConvitePapel')?.value;
+  const clienteId = document.getElementById('cfgConviteClienteId')?.value || null;
+  const nome      = document.getElementById('cfgConviteNome')?.value?.trim();
+  const res       = document.getElementById('cfgConviteResultado');
+
+  if (!nome) { res.innerHTML = '<span style="color:var(--ne-red);font-size:12px">Informe o nome do usuário.</span>'; return; }
+  if (papel.startsWith('cliente') && !clienteId) { res.innerHTML = '<span style="color:var(--ne-red);font-size:12px">Selecione a empresa do cliente.</span>'; return; }
+
+  const token = crypto.randomUUID();
+  const expira = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+  const { error } = await sb.from('convites').insert({ token, papel, nome_ref: nome, cliente_id: clienteId, expira_em: expira, usado: false });
+  if (error) { res.innerHTML = `<span style="color:var(--ne-red);font-size:12px">${error.message}</span>`; return; }
+
+  const baseUrl = window.location.origin + window.location.pathname;
+  const link = `${baseUrl}?convite=${token}`;
+  await navigator.clipboard.writeText(link).catch(() => {});
+
+  res.innerHTML = `<div style="background:var(--green-light);border:1px solid rgba(92,155,58,.2);border-radius:4px;padding:12px;margin-top:8px">
+    <div style="font-size:12px;color:var(--ne-green);font-weight:700;margin-bottom:6px">✅ Link gerado para ${nome}!</div>
+    <div style="font-size:11px;color:var(--ink-lighter);word-break:break-all;margin-bottom:8px">${link}</div>
+    <button class="fin-action-btn" onclick="navigator.clipboard.writeText('${link}');showToast('Copiado!')" style="font-size:11px;color:var(--accent)">📋 Copiar novamente</button>
+  </div>`;
+  document.getElementById('cfgConviteNome').value = '';
 }
 
 async function startApp() {
