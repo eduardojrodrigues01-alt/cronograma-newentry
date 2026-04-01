@@ -4077,17 +4077,36 @@ async function selecionarCliente(clienteId) {
   const nome = document.getElementById('clienteSeletor')?.selectedOptions[0]?.text;
 
   // Atualizar nome e logo no header
-  const logoSub = document.querySelector('.logo-sub');
+  const logoSub = document.getElementById('logoClienteNome');
+  const logoTextWrap = document.querySelector('.logo-text-wrap');
+  const logoImgWrap = document.querySelector('.logo-img-wrap');
   const logoImg = document.querySelector('.logo-img');
-  if (logoSub) logoSub.textContent = clienteId ? nome : 'New Entry';
-  if (logoImg) {
-    if (clienteId && _clienteLogos[clienteId]) {
+
+  if (clienteId && _clienteLogos[clienteId]) {
+    // Tem logo do cliente: mostrar logo dele, esconder texto New Entry
+    if (logoImg) {
       logoImg.src = _clienteLogos[clienteId];
       logoImg.style.mixBlendMode = 'normal';
-    } else {
+      logoImg.style.width = 'auto';
+      logoImg.style.maxHeight = '48px';
+      logoImg.style.maxWidth = '160px';
+    }
+    if (logoTextWrap) logoTextWrap.style.display = 'none';
+  } else {
+    // Sem logo de cliente: restaurar New Entry
+    if (logoImg) {
       logoImg.src = _newEntryLogoB64;
       logoImg.style.mixBlendMode = 'screen';
+      logoImg.style.width = '100%';
+      logoImg.style.maxHeight = '';
+      logoImg.style.maxWidth = '';
     }
+    if (logoTextWrap) logoTextWrap.style.display = '';
+    if (logoSub) logoSub.textContent = 'New Entry';
+  }
+  // Sempre atualizar o sub-texto se visível
+  if (logoSub && logoTextWrap && logoTextWrap.style.display !== 'none') {
+    logoSub.textContent = clienteId && !_clienteLogos[clienteId] ? nome : 'New Entry';
   }
 
   // Recarregar seção ativa
@@ -4537,8 +4556,7 @@ async function uploadLogoCliente(clienteId, input) {
     _clienteLogos[clienteId] = logo_url;
     // Se esse cliente está selecionado, atualizar logo no header
     if (currentClienteId === clienteId) {
-      const logoImg = document.querySelector('.logo-img');
-      if (logoImg) { logoImg.src = logo_url; logoImg.style.mixBlendMode = 'normal'; }
+      selecionarCliente(clienteId); // re-run to update header properly
     }
     showToast('✅ Logo atualizada!');
     carregarClientesConfig();
