@@ -4343,8 +4343,11 @@ async function carregarUsuariosConfig() {
   if (!wrap) return;
   wrap.innerHTML = '<div class="dash-empty">Carregando...</div>';
 
-  const { data: usuarios, error } = await sb.from('usuarios').select('*, clientes(nome)').order('nome');
+  const { data: usuarios, error } = await sb.from('usuarios').select('*').order('nome');
   if (error) { wrap.innerHTML = '<div class="dash-empty" style="color:var(--ne-red)">Erro ao carregar.</div>'; return; }
+  const { data: clientes } = await sb.from('clientes').select('id, nome');
+  const clienteMap = {};
+  (clientes||[]).forEach(c => clienteMap[c.id] = c.nome);
 
   if (!usuarios || usuarios.length === 0) {
     wrap.innerHTML = '<div class="dash-empty">Nenhum usuário cadastrado.</div>';
@@ -4374,7 +4377,7 @@ async function carregarUsuariosConfig() {
         <td><strong>${u.nome||'—'}</strong></td>
         <td style="color:var(--ink-lighter)">${u.email||'—'}</td>
         <td><span class="papel-badge ${papelClass(u.papel)}">${papelLabel[u.papel]||u.papel}</span></td>
-        <td>${u.clientes?.nome || (u.papel.startsWith('agencia') ? '<span style="opacity:.4">—</span>' : '<span style="color:var(--ne-red);font-size:11px">Sem cliente</span>')}</td>
+        <td>${(u.cliente_id ? clienteMap[u.cliente_id] : null) || (u.papel.startsWith('agencia') ? '<span style="opacity:.4">—</span>' : '<span style="color:var(--ne-red);font-size:11px">Sem cliente</span>')}</td>
         <td style="white-space:nowrap">
           <button class="fin-action-btn" onclick="editarUsuario('${u.id}')" title="Editar">✏️</button>
           ${u.papel !== 'agencia' ? `<button class="fin-action-btn" onclick="reenviarConviteUsuario('${u.id}','${u.papel}','${(u.nome||'').replace(/'/g,"\'")}','${u.cliente_id||''}')" title="Reenviar convite">🔗</button>` : ''}
@@ -4388,7 +4391,7 @@ async function carregarUsuariosConfig() {
 async function editarUsuario(userId) {
   const row = document.getElementById('urow-' + userId);
   if (!row) return;
-  const { data: u } = await sb.from('usuarios').select('*, clientes(nome)').eq('id', userId).single();
+  const { data: u } = await sb.from('usuarios').select('*').eq('id', userId).single();
   if (!u) return;
 
   const { data: clientes } = await sb.from('clientes').select('id, nome').order('nome');
