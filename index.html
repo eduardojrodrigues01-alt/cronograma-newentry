@@ -3727,8 +3727,7 @@ async function carregarFinanceiro() {
     const filtroStatus = document.getElementById('finFiltroStatus')?.value;
     const hoje = new Date(); hoje.setHours(0,0,0,0);
     const rows = (data||[]).map(r => {
-      const pag = r.data_pagamento ? new Date(r.data_pagamento + 'T00:00:00') : null;
-      let status = r.pago ? 'pago' : (pag && pag < hoje ? 'vencido' : 'pendente');
+      let status = r.pago ? 'pago' : 'pendente';
       return { ...r, _status: status };
     }).filter(r => !filtroStatus || r._status === filtroStatus);
 
@@ -3819,7 +3818,7 @@ async function adicionarCobranca() {
       data_pagamento: pagamento || null,
       valor,
       observacoes: obs || null,
-      pago: !!pagamento,
+      pago: false,
       criado_por: (await sb.auth.getUser()).data.user?.id
     });
     if (error) throw error;
