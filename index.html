@@ -1462,13 +1462,13 @@
 
 <!-- Nav Tabs -->
 <nav class="nav-tabs" id="navTabs" style="display:none">
-  <button class="nav-tab active" id="tabCronograma" onclick="showSection('cronograma')">📅 Cronograma</button>
-  <button class="nav-tab" id="tabDashboard" onclick="showSection('dashboard')">📊 Dashboard</button>
+  <button class="nav-tab active" id="tabDashboard" onclick="showSection('dashboard')">📊 Dashboard</button>
+  <button class="nav-tab" id="tabCronograma" onclick="showSection('cronograma')">📅 Cronograma</button>
   <button class="nav-tab" id="tabFinanceiro" onclick="showSection('financeiro')">💰 Financeiro</button>
 </nav>
 
 <!-- CRONOGRAMA -->
-<div class="section-panel active" id="sectionCronograma">
+<div class="section-panel" id="sectionCronograma">
 <div class="app">
 
   <!-- Stats -->
@@ -1507,7 +1507,7 @@
 </div><!-- end sectionCronograma -->
 
 <!-- DASHBOARD -->
-<div class="section-panel" id="sectionDashboard">
+<div class="section-panel active" id="sectionDashboard">
   <div class="dashboard-wrap">
     <div class="dash-grid" id="dashStats"></div>
     <div class="dash-bar-wrap" id="dashBarClientes" style="display:none">
@@ -3482,9 +3482,18 @@ function setupNavTabs(papel) {
 
   nav.style.display = '';
 
+  // Mostrar seletor de cliente para agência
+  const seletorWrapSetup = document.getElementById('clienteSeletorWrap');
+  if (seletorWrapSetup) {
+    seletorWrapSetup.style.display = isAgency ? '' : 'none';
+    if (isAgency) popularSeletorCliente();
+  }
+
   // Se só pode ver financeiro, ir direto para lá
   if (!canCrono && canFin) {
     showSection('financeiro');
+  } else if (canDash) {
+    showSection('dashboard');
   }
 }
 
@@ -3512,15 +3521,15 @@ async function loadDashboard() {
         <div class="dash-card-value">${total}</div>
         <div class="dash-card-sub">${withPost} com conteúdo</div>
       </div>
-      <div class="dash-card approved">
-        <div class="dash-card-label">Aprovados</div>
-        <div class="dash-card-value">${approved}</div>
-        <div class="dash-card-sub">${total ? Math.round(approved/total*100) : 0}% do total</div>
-      </div>
       <div class="dash-card pending">
         <div class="dash-card-label">Aguardando</div>
         <div class="dash-card-value">${pending}</div>
         <div class="dash-card-sub">${total ? Math.round(pending/total*100) : 0}% do total</div>
+      </div>
+      <div class="dash-card approved">
+        <div class="dash-card-label">Aprovados</div>
+        <div class="dash-card-value">${approved}</div>
+        <div class="dash-card-sub">${total ? Math.round(approved/total*100) : 0}% do total</div>
       </div>
       <div class="dash-card rejected">
         <div class="dash-card-label">Reprovados</div>
@@ -3531,8 +3540,8 @@ async function loadDashboard() {
     // Bar por status
     const maxS = Math.max(approved, pending, rejected, 1);
     document.getElementById('dashBarStatusBody').innerHTML = [
-      { label: 'Aprovado', count: approved, color: 'var(--ne-green)' },
       { label: 'Aguardando', count: pending, color: 'var(--pending)' },
+      { label: 'Aprovado', count: approved, color: 'var(--ne-green)' },
       { label: 'Reprovado', count: rejected, color: 'var(--ne-red)' },
     ].map(s => `
       <div class="dash-bar-row">
