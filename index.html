@@ -1662,11 +1662,11 @@
       <!-- Criar cliente -->
       <div class="cliente-form" style="margin-bottom:16px">
         <h3 style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-lighter);margin-bottom:12px">Criar novo cliente</h3>
-        <div style="display:flex;gap:8px">
+        <div style="display:flex;gap:8px;margin-bottom:8px">
           <input type="text" id="cfgNovoClienteNome" placeholder="Nome da empresa" style="flex:1;padding:8px 12px;border:1px solid var(--stone);border-radius:6px;font-size:13px;font-family:inherit;background:var(--off-white);color:var(--ink)">
           <button class="btn btn-primary btn-sm" onclick="cfgCriarCliente()">＋ Criar</button>
         </div>
-        <div id="cfgClienteCriadoMsg" style="margin-top:8px;font-size:12px"></div>
+        <div id="cfgClienteCriadoMsg" style="font-size:12px"></div>
       </div>
       <!-- Lista clientes -->
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-lighter);margin-bottom:12px">Clientes cadastrados</div>
@@ -1696,6 +1696,10 @@
 // SUPABASE
 // ────────────────────────────────────────────
 const sb = supabase.createClient('https://peazuzkeqedzfseusrxp.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlYXp1emtlcWVkemZzZXVzcnhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMzc2ODAsImV4cCI6MjA4OTYxMzY4MH0.Bly3Ch4txJZ1VLy-8NSwE9_BW8Bm7z5k7fnkD_MtLXY');
+
+// Logo map por cliente (base64) — adicionar via Configurações futuramente
+const _clienteLogos = {};
+const _newEntryLogoB64 = document.querySelector('.logo-img')?.src || '';
 
 // Capturar token de magic link / reset de senha na URL
 let _authRedirectHandled = false;
@@ -3693,7 +3697,7 @@ async function popularFinFiltros() {
     if (addForm) addForm.style.display = '';
   }
 
-  const { data: clientes } = await sb.from('clientes').select('id, nome').order('nome');
+  const { data: clientes } = await sb.from('clientes').select('id, nome, logo_url').order('nome');
   const opts = (clientes||[]).map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
   if (selFiltro) {
     selFiltro.innerHTML = '<option value="">Todos os clientes</option>' + opts;
@@ -4053,7 +4057,7 @@ async function popularSeletorCliente() {
   const wrap = document.getElementById('clienteSeletorWrap');
   if (!sel) return;
   try {
-    const { data: clientes } = await sb.from('clientes').select('id, nome').order('nome');
+    const { data: clientes } = await sb.from('clientes').select('id, nome, logo_url').order('nome');
     sel.innerHTML = '<option value="">— Selecionar —</option>';
     (clientes || []).forEach(c => {
       const opt = document.createElement('option');
@@ -4063,6 +4067,8 @@ async function popularSeletorCliente() {
     });
     if (currentClienteId) sel.value = currentClienteId;
     if (wrap) wrap.style.display = isAgency ? '' : 'none';
+    // Carregar logos dos clientes
+    (clientes||[]).forEach(c => { if (c.logo_url) _clienteLogos[c.id] = c.logo_url; });
   } catch(e) { console.error(e); }
 }
 
@@ -4070,9 +4076,19 @@ async function selecionarCliente(clienteId) {
   currentClienteId = clienteId || null;
   const nome = document.getElementById('clienteSeletor')?.selectedOptions[0]?.text;
 
-  // Atualizar nome do cliente no logo-sub
+  // Atualizar nome e logo no header
   const logoSub = document.querySelector('.logo-sub');
+  const logoImg = document.querySelector('.logo-img');
   if (logoSub) logoSub.textContent = clienteId ? nome : 'New Entry';
+  if (logoImg) {
+    if (clienteId && _clienteLogos[clienteId]) {
+      logoImg.src = _clienteLogos[clienteId];
+      logoImg.style.mixBlendMode = 'normal';
+    } else {
+      logoImg.src = _newEntryLogoB64;
+      logoImg.style.mixBlendMode = 'screen';
+    }
+  }
 
   // Recarregar seção ativa
   const activeSection = document.querySelector('.section-panel.active')?.id;
@@ -4395,7 +4411,7 @@ async function editarUsuario(userId) {
   const { data: u } = await sb.from('usuarios').select('*').eq('id', userId).single();
   if (!u) return;
 
-  const { data: clientes } = await sb.from('clientes').select('id, nome').order('nome');
+  const { data: clientes } = await sb.from('clientes').select('id, nome, logo_url').order('nome');
   const clienteOpts = (clientes||[]).map(c => `<option value="${c.id}" ${c.id === u.cliente_id ? 'selected' : ''}>${c.nome}</option>`).join('');
 
   row.innerHTML = `
@@ -4484,10 +4500,14 @@ async function carregarClientesConfig() {
     <tbody>
       ${clientes.map(c => {
         const users = (usuarios||[]).filter(u => u.cliente_id === c.id);
+        const logoThumb = c.logo_url ? `<img src="${c.logo_url}" style="height:28px;object-fit:contain;margin-right:8px;vertical-align:middle">` : '';
         return `<tr>
-          <td><strong>${c.nome}</strong></td>
+          <td>${logoThumb}<strong>${c.nome}</strong></td>
           <td>${users.length > 0 ? users.map(u => `<div style="font-size:11px;color:var(--ink-lighter)">👤 ${u.nome||u.email}</div>`).join('') : '<span style="opacity:.4;font-size:11px">Sem usuários</span>'}</td>
-          <td><button class="fin-action-btn" onclick="excluirClienteConfig('${c.id}','${(c.nome||'').replace(/'/g,"\'")}')">🗑</button></td>
+          <td style="white-space:nowrap">
+            <label class="fin-action-btn" title="Subir logo" style="cursor:pointer">🖼️<input type="file" accept="image/*" style="display:none" onchange="uploadLogoCliente('${c.id}', this)"></label>
+            <button class="fin-action-btn" onclick="excluirClienteConfig('${c.id}','${(c.nome||'').replace(/'/g,"\'")}')">🗑</button>
+          </td>
         </tr>`;
       }).join('')}
     </tbody>
@@ -4498,6 +4518,33 @@ async function carregarClientesConfig() {
   if (sel) {
     sel.innerHTML = '<option value="">— Selecionar empresa —</option>' +
       (clientes||[]).map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+  }
+}
+
+async function uploadLogoCliente(clienteId, input) {
+  const file = input.files?.[0];
+  if (!file) return;
+  showToast('Enviando logo...');
+  try {
+    const ext = file.name.split('.').pop();
+    const path = `logo-cliente-${clienteId}.${ext}`;
+    await sb.storage.from('posts-media').remove([path]).catch(() => {});
+    const { error: upErr } = await sb.storage.from('posts-media').upload(path, file, { upsert: true, contentType: file.type });
+    if (upErr) throw upErr;
+    const { data: signed } = await sb.storage.from('posts-media').createSignedUrl(path, 60*60*24*365*3);
+    const logo_url = signed?.signedUrl;
+    await sb.from('clientes').update({ logo_url }).eq('id', clienteId);
+    _clienteLogos[clienteId] = logo_url;
+    // Se esse cliente está selecionado, atualizar logo no header
+    if (currentClienteId === clienteId) {
+      const logoImg = document.querySelector('.logo-img');
+      if (logoImg) { logoImg.src = logo_url; logoImg.style.mixBlendMode = 'normal'; }
+    }
+    showToast('✅ Logo atualizada!');
+    carregarClientesConfig();
+  } catch(e) {
+    showToast('Erro: ' + (e.message || JSON.stringify(e)));
+    console.error(e);
   }
 }
 
@@ -4633,7 +4680,7 @@ function openClientesModal() {
 async function popularConviteClienteSelect() {
   const sel = document.getElementById('conviteClienteId');
   if (!sel) return;
-  const { data } = await sb.from('clientes').select('id, nome').order('nome');
+  const { data } = await sb.from('clientes').select('id, nome, logo_url').order('nome');
   sel.innerHTML = '<option value="">— Selecionar empresa do cliente —</option>' +
     (data||[]).map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
 }
