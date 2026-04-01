@@ -3852,6 +3852,7 @@ async function carregarFinanceiro() {
       const badge = `<span class="fin-badge ${r._status}">${{pago:'Pago',pendente:'Pendente',vencido:'Vencido'}[r._status]}</span>`;
 
       const acoes = canEdit ? `
+        <button class="fin-action-btn" onclick="editarEntradaFin('${r.id}')" title="Editar entrada">✏️</button>
         <button class="fin-action-btn" onclick="enviarNFEmail('${r.id}')" title="Enviar por email">✉️</button>
         <button class="fin-action-btn" onclick="togglePago('${r.id}', ${r.pago})" title="${r.pago ? 'Desmarcar pago' : 'Marcar como pago'}">${r.pago ? '↩' : '✓'}</button>
         <button class="fin-action-btn" onclick="excluirCobranca('${r.id}')" style="color:var(--ne-red)" title="Excluir">🗑</button>` : '';
@@ -4023,6 +4024,56 @@ async function togglePago(id, pagoAtual) {
   } catch(e) {
     showToast('Erro: ' + e.message);
   }
+}
+
+async function editarEntradaFin(id) {
+  const row = document.querySelector(`tr[data-id="${id}"]`);
+  if (!row) return;
+  const { data: r } = await sb.from('financeiro').select('*').eq('id', id).single();
+  if (!r) return;
+
+  // Get clientes for select
+  const { data: clientes } = await sb.from('clientes').select('id, nome').order('nome');
+  const clienteOpts = (clientes||[]).map(c => `<option value="${c.id}" ${c.id === r.cliente_id ? 'selected' : ''}>${c.nome}</option>`).join('');
+  const fmt = d => d ? d.substring(0,10) : '';
+
+  row.innerHTML = `
+    ${isAgency ? `<td><select style="font-size:12px;padding:3px 6px;border:1px solid var(--stone);border-radius:3px;max-width:110px">${clienteOpts}</select></td>` : ''}
+    <td><input value="${r.referencia||r.descricao||''}" style="width:130px;font-size:12px;padding:3px 6px;border:1px solid var(--stone);border-radius:3px" id="fedit-ref-${id}"></td>
+    <td><input type="date" value="${fmt(r.data_emissao_nf)}" style="font-size:12px;padding:3px 4px;border:1px solid var(--stone);border-radius:3px" id="fedit-emissao-${id}"></td>
+    <td><input type="date" value="${fmt(r.data_pagamento)}" style="font-size:12px;padding:3px 4px;border:1px solid var(--stone);border-radius:3px" id="fedit-pag-${id}"></td>
+    <td style="text-align:right"><input type="number" value="${r.valor||0}" step="0.01" style="width:90px;font-size:12px;padding:3px 6px;border:1px solid var(--stone);border-radius:3px;text-align:right" id="fedit-val-${id}"></td>
+    <td></td>
+    <td><input value="${r.observacoes||''}" style="width:120px;font-size:12px;padding:3px 6px;border:1px solid var(--stone);border-radius:3px" id="fedit-obs-${id}"></td>
+    <td></td>
+    <td style="white-space:nowrap">
+      <button class="fin-action-btn" onclick="salvarEntradaFin('${id}')" style="color:var(--ne-green);font-weight:700" title="Salvar">✓</button>
+      <button class="fin-action-btn" onclick="carregarFinanceiro()" title="Cancelar">✕</button>
+    </td>`;
+}
+
+async function salvarEntradaFin(id) {
+  const ref     = document.getElementById(`fedit-ref-${id}`)?.value?.trim();
+  const emissao = document.getElementById(`fedit-emissao-${id}`)?.value;
+  const pag     = document.getElementById(`fedit-pag-${id}`)?.value;
+  const valor   = parseFloat(document.getElementById(`fedit-val-${id}`)?.value);
+  const obs     = document.getElementById(`fedit-obs-${id}`)?.value?.trim();
+
+  if (!ref)              { showToast('Informe a referência'); return; }
+  if (!valor || valor <= 0) { showToast('Informe o valor'); return; }
+
+  const { error } = await sb.from('financeiro').update({
+    referencia: ref,
+    descricao: ref,
+    data_emissao_nf: emissao || null,
+    data_pagamento: pag || null,
+    valor,
+    observacoes: obs || null
+  }).eq('id', id);
+
+  if (error) { showToast('Erro: ' + error.message); return; }
+  showToast('✅ Entrada atualizada!');
+  carregarFinanceiro();
 }
 
 async function excluirCobranca(id) {
