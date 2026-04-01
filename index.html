@@ -3475,18 +3475,24 @@ function setupNavTabs(papel) {
   const canCrono = ['agencia','agencia-operador','cliente-operador','cliente-completo'].includes(papel);
   const canDash  = ['agencia','agencia-operador','cliente-operador','cliente-completo'].includes(papel);
   const canFin   = ['agencia','cliente-financeiro','cliente-completo'].includes(papel);
+  const canManageClientes = papel === 'agencia';
 
   if (tabCrono) tabCrono.style.display = canCrono ? '' : 'none';
   if (tabDash)  tabDash.style.display  = canDash  ? '' : 'none';
   if (tabFin)   tabFin.style.display   = canFin   ? '' : 'none';
 
+  // Botão clientes só para agência master
+  const cBtnSetup = document.getElementById('clientesBtn');
+  if (cBtnSetup) cBtnSetup.style.display = canManageClientes ? '' : 'none';
+
   nav.style.display = '';
 
   // Mostrar seletor de cliente para agência
+  const isAgencyRole = ['agencia','agencia-operador'].includes(papel);
   const seletorWrapSetup = document.getElementById('clienteSeletorWrap');
   if (seletorWrapSetup) {
-    seletorWrapSetup.style.display = isAgency ? '' : 'none';
-    if (isAgency) popularSeletorCliente();
+    seletorWrapSetup.style.display = isAgencyRole ? '' : 'none';
+    if (isAgencyRole) popularSeletorCliente();
   }
 
   // Se só pode ver financeiro, ir direto para lá
