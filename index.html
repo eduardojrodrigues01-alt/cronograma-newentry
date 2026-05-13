@@ -66,7 +66,7 @@
 
   <!-- Calendar -->
   <div class="calendar-wrap">
-    <div class="weekdays">
+    <div class="calendar-grid" id="calendarGrid">
       <div class="weekday">Dom</div>
       <div class="weekday">Seg</div>
       <div class="weekday">Ter</div>
@@ -75,7 +75,6 @@
       <div class="weekday">Sex</div>
       <div class="weekday weekend">Sáb</div>
     </div>
-    <div class="days-grid" id="daysGrid"></div>
   </div>
 </div>
 </div><!-- end sectionCronograma -->
@@ -374,18 +373,23 @@ function cardStatus(card) {
 // CALENDAR RENDER
 // ────────────────────────────────────────────
 function renderCalendar() {
+  const grid = document.getElementById('calendarGrid');
+  // Remove only dynamic content, keeping weekday header cells
+  Array.from(grid.children).forEach(el => {
+    if (!el.classList.contains('weekday')) el.remove();
+  });
+
   // Mostrar aviso se agência não selecionou cliente
-  const grid = document.getElementById('daysGrid');
   if (isAgency && !currentClienteId && grid) {
-    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--ink-lighter)">
-      <div style="font-size:32px;margin-bottom:12px">👥</div>
+    const msg = document.createElement('div');
+    msg.style.cssText = 'grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--ink-lighter)';
+    msg.innerHTML = `<div style="font-size:32px;margin-bottom:12px">👥</div>
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;text-transform:uppercase;letter-spacing:.05em">Selecione um cliente</div>
-      <div style="font-size:13px;margin-top:6px">Use o seletor no topo para ver o cronograma de um cliente.</div>
-    </div>`;
+      <div style="font-size:13px;margin-top:6px">Use o seletor no topo para ver o cronograma de um cliente.</div>`;
+    grid.appendChild(msg);
     renderStats();
     return;
   }
-  grid.innerHTML = '';
 
   document.getElementById('monthTitle').textContent = `${MONTHS_PT[viewMonth]} ${viewYear}`;
 
