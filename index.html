@@ -1370,9 +1370,9 @@ async function saveCard(cardId) {
   }
   card.saved = true;
   showToast('💾 Salvando...');
-  await saveCardToSupabase(card, selectedDay);
+  const saved = await saveCardToSupabase(card, selectedDay);
   renderModalBody(); renderCalendar();
-  showToast('💾 Card salvo!');
+  if (saved) showToast('💾 Card salvo!');
 }
 
 function alterCard(cardId) {
@@ -1934,13 +1934,13 @@ async function saveCardToSupabase(card, dateStr) {
     
     if (card.db_id && card.db_id === card.id) {
       // Update card
-      await sb.from('cards').update({
+      const { error: updateError } = await sb.from('cards').update({
         titulo: card.title,
         legenda: card.caption,
         status: card.status,
-        salvo: card.saved,
-        atualizado_em: new Date().toISOString()
+        salvo: card.saved
       }).eq('id', card.db_id);
+      if (updateError) throw updateError;
     } else {
       // Insert card
       const { data, error } = await sb.from('cards').insert({
@@ -1964,7 +1964,7 @@ async function saveCardToSupabase(card, dateStr) {
       const storagePath = await uploadFileToSupabase(file, card.db_id);
       if (!storagePath) {
         showToast('❌ Falha no upload do arquivo. Tente novamente.');
-        return;
+        return false;
       }
 
       // Para vídeo: fazer upload da capa e salvar ambos como JSON
@@ -1996,7 +1996,7 @@ async function saveCardToSupabase(card, dateStr) {
       if (postError) {
         console.error('Erro ao salvar post:', postError);
         showToast('❌ Erro ao salvar post. Verifique o console.');
-        return;
+        return false;
       }
 
       if (postData) {
@@ -2019,21 +2019,24 @@ async function saveCardToSupabase(card, dateStr) {
           uploadedItems.push({ nome: item.name, storage_path: item.storage_path, fileType: item.fileType });
         }
       }
-      const { data: postData } = await sb.from('posts').insert({
+      const { data: postData, error: carouselError } = await sb.from('posts').insert({
         card_id: card.db_id,
         tipo: 'carousel',
         nome: 'Carrossel',
         storage_path: JSON.stringify(uploadedItems)
       }).select().single();
+      if (carouselError) throw carouselError;
       if (postData) card.post.db_id = postData.id;
     } else if (!card.post && card.db_id) {
       // Post removido — deletar do banco
       await sb.from('posts').delete().eq('card_id', card.db_id);
     }
 
+    return true;
   } catch(err) {
     console.error('Erro ao salvar card:', err);
-    showToast('Erro ao salvar. Tente novamente.');
+    showToast('❌ Erro ao salvar. Verifique o console.');
+    return false;
   }
 }
 
