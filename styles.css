@@ -310,11 +310,9 @@
     overflow: hidden;
     box-shadow: var(--shadow-card);
   }
-  .weekdays {
+  .calendar-grid {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    border-bottom: 0.5px solid rgba(255,255,255,0.1);
-    background: #1E1E1E;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
   }
   .weekday {
     padding: 12px 0;
@@ -323,9 +321,10 @@
     font-size: 11px; font-weight: 700;
     letter-spacing: 0.14em; text-transform: uppercase;
     color: rgba(255,255,255,0.35);
+    background: #1E1E1E;
+    border-bottom: 0.5px solid rgba(255,255,255,0.1);
   }
   .weekday.weekend { color: rgba(255,255,255,0.18); }
-  .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
   .day-cell {
     border-right: 1px solid var(--stone);
     border-bottom: 1px solid var(--stone);
@@ -334,6 +333,8 @@
     position: relative; display: flex;
     flex-direction: column; gap: 4px;
     background: var(--surface);
+    overflow: hidden;
+    min-width: 0;
   }
   .day-cell:nth-child(7n) { border-right: none; }
   .day-cell:hover { background: #f5f3ef; }
