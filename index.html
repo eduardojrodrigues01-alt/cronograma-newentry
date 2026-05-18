@@ -1909,6 +1909,7 @@ async function loadCalendarData() {
 
       calendarData[dateStr].cards.push({
         id: card.id,
+        db_id: card.id,
         title: card.titulo,
         caption: card.legenda || '',
         status: card.status,
